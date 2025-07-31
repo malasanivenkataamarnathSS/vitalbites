@@ -41,6 +41,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const otpExpires = new Date(now.getTime() + 10 * 60 * 1000); // 10 min
 
+  console.log(`[OTP DEBUG] Generated OTP for ${email}: ${otp}`);
+
   if (!user) {
     user = await User.create({ email, otp, otpExpires, lastOtpSent: now });
   } else {
@@ -96,39 +98,83 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     return res.status(400).json({ error: "Invalid or expired OTP" });
   }
 
-  // New user: prompt for details
+  console.log(`OTP verified successfully for: ${email}`);
+
+  // Check if user is new (no username or mobile)
   if (!user.username || !user.mobile) {
-    console.log(`New user detected: ${email}. Prompting for additional details.`);
-    return res.json({ needDetails: true, message: "Username and mobile required for registration" });
+    console.log(`New user detected: ${email}. Showing registration form.`);
+    return res.json({
+      needDetails: true,
+      isNewUser: true,
+      message: "Please complete your registration"
+    });
   }
 
-  // Existing user: login
+  // Existing user: login directly
   user.otp = undefined;
   user.otpExpires = undefined;
   await user.save();
 
   const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-  console.log(`Existing user login: ${email}. Redirecting to homepage.`);
-  res.json({ token, userId: user._id, username: user.username, role: user.role });
+  console.log(`Existing user login: ${email}`);
+  res.json({
+    token,
+    userId: user._id,
+    username: user.username,
+    mobile: user.mobile,
+    role: user.role
+  });
 });
 
 // Complete registration for new user
 app.post('/api/auth/complete-registration', async (req, res) => {
   const { email, username, mobile } = req.body;
-  if (!email || !username || !mobile) return res.status(400).json({ error: "Missing fields" });
+
+  // Validate input
+  if (!email || !username || !mobile) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  // Validate username (letters only, 2-50 characters)
+  const namePattern = /^[a-zA-Z\s]{2,50}$/;
+  if (!namePattern.test(username.trim())) {
+    return res.status(400).json({ error: "Name must contain only letters and be 2-50 characters long" });
+  }
+
+  // Validate Indian mobile number (+91 followed by 10 digits starting with 6-9)
+  const mobilePattern = /^\+91[6-9]\d{9}$/;
+  if (!mobilePattern.test(mobile)) {
+    return res.status(400).json({ error: "Mobile number must be in format +91XXXXXXXXXX and start with 6-9" });
+  }
 
   const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ error: "User not found" });
+  if (!user) {
+    return res.status(400).json({ error: "User not found" });
+  }
 
-  user.username = username;
+  const wasNewUser = !user.username || !user.mobile;
+
+  user.username = username.trim();
   user.mobile = mobile;
   user.otp = undefined;
   user.otpExpires = undefined;
   await user.save();
 
   const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-  console.log(`User created: ${email}, Name: ${username}, Mobile: ${mobile}. Redirecting to homepage.`);
-  res.json({ token, userId: user._id, username: user.username, role: user.role });
+
+  if (wasNewUser) {
+    console.log(`New user registered: ${email}, Name: ${username}, Mobile: ${mobile}`);
+  } else {
+    console.log(`User completed registration: ${email}, Name: ${username}, Mobile: ${mobile}`);
+  }
+
+  res.json({
+    token,
+    userId: user._id,
+    username: user.username,
+    mobile: user.mobile,
+    role: user.role
+  });
 });
 
 // Verify JWT
@@ -140,6 +186,33 @@ app.get('/api/auth/verify', (req, res) => {
     res.json({ user: decoded });
   } catch (e) {
     res.status(401).json({ error: "Invalid token" });
+  }
+});
+
+// Debug endpoint to check user status (remove in production)
+app.get('/api/auth/debug-user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ exists: false, message: 'User not found' });
+    }
+
+    const now = new Date();
+    const otpValid = user.otp && user.otpExpires && user.otpExpires > now;
+
+    res.json({
+      exists: true,
+      email: user.email,
+      hasUsername: !!user.username,
+      hasMobile: !!user.mobile,
+      currentOtp: user.otp,
+      otpValid,
+      otpExpires: user.otpExpires,
+      needsDetails: !user.username || !user.mobile
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

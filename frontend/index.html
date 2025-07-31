@@ -369,53 +369,209 @@
 
 <body class="bg-gray-50 font-sans">
     <!-- Header -->
-    <header class="bg-gray-900 shadow-md sticky top-0 z-50 flex items-center px-6 py-3">
-        <!-- Brand Name -->
-        <span class="text-2xl font-bold text-white">VitalBites</span>
-
-        <div class="flex items-center space-x-2 ml-auto">
-            <div class="relative">
-                <button id="cart-btn" class="relative p-2 rounded-full hover:bg-gray-100">
-                    <i class="fas fa-shopping-cart text-xl text-gray-700"></i>
-                    <span id="cart-count"
-                        class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
-                </button>
-
-                <!-- Cart Dropdown -->
-                <div id="cart-dropdown"
-                    class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 cart-dropdown">
-                    <div class="px-4 py-2 border-b border-gray-200">
-                        <h3 class="font-semibold text-gray-800">Your Order</h3>
+    <header class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-2">
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                            VitalBites
+                        </h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Fresh • Fast • Delicious</p>
                     </div>
-                    <div id="cart-items" class="max-h-64 overflow-y-auto px-2">
-                        <p class="text-gray-500 text-center py-4">Your cart is empty</p>
+                </div>
+
+                <!-- Search Bar (for logged in users) -->
+                <div id="search-container" class="hidden flex-1 max-w-md mx-8">
+                    <div class="relative">
+                        <input type="text" id="search-input"
+                            class="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-full px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            placeholder="Search restaurants or dishes...">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
-                    <div class="px-4 py-3 border-t border-gray-200">
-                        <div class="flex justify-between mb-2">
-                            <span class="font-medium">Total:</span>
-                            <span id="cart-total" class="font-bold">$0.00</span>
+                </div>
+
+                <!-- Right Navigation -->
+                <div class="flex items-center space-x-4">
+                    <!-- Location (for logged in users) -->
+                    <div id="location-container"
+                        class="hidden items-center space-x-1 text-gray-300 hover:text-white cursor-pointer transition-colors">
+                        <i class="fas fa-map-marker-alt text-orange-500"></i>
+                        <span class="text-sm hidden md:block">Delivery to</span>
+                        <span class="text-sm font-medium">Current Location</span>
+                    </div>
+
+                    <!-- Notifications (for logged in users) -->
+                    <div id="notifications-container" class="hidden relative">
+                        <button class="relative p-2 text-gray-300 hover:text-white transition-colors">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                        </button>
+                    </div>
+
+                    <!-- Cart -->
+                    <div class="relative">
+                        <button id="cart-btn"
+                            class="relative p-2 text-gray-300 hover:text-white transition-colors group">
+                            <i class="fas fa-shopping-cart text-xl group-hover:scale-110 transition-transform"></i>
+                            <span id="cart-count"
+                                class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">0</span>
+                        </button>
+
+                        <!-- Enhanced Cart Dropdown -->
+                        <div id="cart-dropdown"
+                            class="hidden absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 cart-dropdown">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4">
+                                <h3 class="font-bold text-white text-lg flex items-center">
+                                    <i class="fas fa-shopping-bag mr-2"></i>
+                                    Your Order
+                                </h3>
+                            </div>
+                            <div id="cart-items" class="max-h-64 overflow-y-auto">
+                                <div class="p-6 text-center text-gray-500">
+                                    <i class="fas fa-shopping-cart text-4xl mb-3 text-gray-300"></i>
+                                    <p class="text-lg font-medium">Your cart is empty</p>
+                                    <p class="text-sm">Add some delicious items to get started!</p>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-semibold text-gray-700">Total:</span>
+                                    <span id="cart-total" class="font-bold text-xl text-gray-900">₹0.00</span>
+                                </div>
+                                <button
+                                    class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-lg font-semibold transition duration-300 transform hover:scale-105 checkout-btn">
+                                    <i class="fas fa-credit-card mr-2"></i>
+                                    Proceed to Checkout
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-medium transition duration-300 checkout-btn">
-                            Checkout
+                    </div>
+
+                    <!-- Profile/Login Button -->
+                    <div id="profile-icon-container" class="relative">
+                        <button id="profile-btn"
+                            class="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-700">
+                            <div
+                                class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-sm"></i>
+                            </div>
+                            <span class="hidden md:block font-medium">Sign In</span>
+                        </button>
+                    </div>
+
+                    <!-- User Menu (for logged in users) -->
+                    <div id="user-menu-container" class="hidden relative">
+                        <button id="user-menu-btn"
+                            class="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-700">
+                            <div
+                                class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                                <span id="user-avatar" class="text-white text-sm font-bold">U</span>
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium" id="user-name">User Name</p>
+                                <p class="text-xs text-gray-400">Foodie Member</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <!-- User Dropdown Menu -->
+                        <div id="user-dropdown"
+                            class="hidden absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="font-semibold text-gray-800" id="dropdown-user-name">User Name</p>
+                                <p class="text-sm text-gray-600" id="dropdown-user-email">user@example.com</p>
+                            </div>
+                            <div class="py-2">
+                                <a href="#"
+                                    class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-user-circle mr-3 text-gray-400"></i>
+                                    My Profile
+                                </a>
+                                <a href="#"
+                                    class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                                    Order History
+                                </a>
+                                <a href="#"
+                                    class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-heart mr-3 text-gray-400"></i>
+                                    Favorites
+                                </a>
+                                <a href="#"
+                                    class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-cog mr-3 text-gray-400"></i>
+                                    Settings
+                                </a>
+                            </div>
+                            <div class="border-t border-gray-100">
+                                <button id="logout-btn"
+                                    class="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Welcome Banner -->
+    <section id="welcome-banner"
+        class="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 text-white py-16 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="relative max-w-7xl mx-auto text-center">
+            <div class="animate__animated animate__fadeInUp">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    Welcome to <span class="text-yellow-300">VitalBites</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-orange-100">
+                    Delicious food delivered to your doorstep in minutes
+                </p>
+                <div id="cta-container" class="space-y-4">
+                    <!-- For non-logged in users -->
+                    <div id="guest-cta" class="space-y-4">
+                        <button onclick="window.location.href='login.html'"
+                            class="bg-white text-orange-600 font-bold py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition duration-300 transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-utensils mr-2"></i>
+                            Get Started
+                        </button>
+                    </div>
+
+                    <!-- For logged in users -->
+                    <div id="user-cta" class="hidden space-y-4">
+                        <h2 class="text-2xl mb-4">
+                            <span id="welcome-user-name">Welcome back, User!</span> 🍽️
+                        </h2>
+                        <button onclick="document.getElementById('food-section').scrollIntoView({behavior: 'smooth'})"
+                            class="bg-white text-orange-600 font-bold py-3 px-8 rounded-full text-lg hover:bg-gray-100 transition duration-300 transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-utensils mr-2"></i>
+                            Browse Menu
                         </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Profile Icon Button -->
-            <button id="profile-btn" class="p-2 rounded-full hover:bg-gray-100">
-                <i class="fas fa-user text-xl text-gray-700"></i>
-            </button>
-
-            <!-- Menu Icon - Only visible when logged in -->
-            <div id="menu-icon-container" class="hidden">
-                <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-100">
-                    <i class="fas fa-bars text-xl text-gray-700"></i>
-                </button>
-            </div>
         </div>
-    </header>
+
+        <!-- Floating food icons -->
+        <div class="absolute top-10 left-10 animate-bounce animation-delay-1000">
+            <i class="fas fa-pizza-slice text-4xl text-yellow-300 opacity-70"></i>
+        </div>
+        <div class="absolute top-20 right-16 animate-bounce animation-delay-2000">
+            <i class="fas fa-hamburger text-3xl text-yellow-300 opacity-70"></i>
+        </div>
+        <div class="absolute bottom-16 left-20 animate-bounce animation-delay-500">
+            <i class="fas fa-ice-cream text-3xl text-yellow-300 opacity-70"></i>
+        </div>
+        <div class="absolute bottom-10 right-10 animate-bounce animation-delay-1500">
+            <i class="fas fa-cookie text-4xl text-yellow-300 opacity-70"></i>
+        </div>
+    </section>
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
@@ -468,7 +624,7 @@
         </section>
 
         <!-- Featured Menu Items -->
-        <section>
+        <section id="food-section">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Menu Items</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="food-items">
                 <!-- Food items will be added dynamically with JavaScript -->
@@ -738,11 +894,54 @@
 
         // Update UI based on login status
         function updateUIForLoginStatus() {
-            const menuIconContainer = document.getElementById('menu-icon-container');
+            const profileIconContainer = document.getElementById('profile-icon-container');
+            const userMenuContainer = document.getElementById('user-menu-container');
+            const searchContainer = document.getElementById('search-container');
+            const locationContainer = document.getElementById('location-container');
+            const notificationsContainer = document.getElementById('notifications-container');
+            const guestCta = document.getElementById('guest-cta');
+            const userCta = document.getElementById('user-cta');
+            const welcomeUserName = document.getElementById('welcome-user-name');
+
             if (isLoggedIn()) {
-                menuIconContainer.classList.remove('hidden');
+                // Hide login button, show user menu and other logged-in elements
+                profileIconContainer.classList.add('hidden');
+                userMenuContainer.classList.remove('hidden');
+                searchContainer.classList.remove('hidden');
+                searchContainer.classList.add('flex');
+                locationContainer.classList.remove('hidden');
+                locationContainer.classList.add('flex');
+                notificationsContainer.classList.remove('hidden');
+
+                // Update welcome banner
+                if (guestCta) guestCta.classList.add('hidden');
+                if (userCta) userCta.classList.remove('hidden');
+
+                // Update user info
+                const username = localStorage.getItem('username') || 'User';
+                const email = localStorage.getItem('userEmail') || 'user@example.com';
+
+                document.getElementById('user-name').textContent = username;
+                document.getElementById('dropdown-user-name').textContent = username;
+                document.getElementById('dropdown-user-email').textContent = email;
+                if (welcomeUserName) welcomeUserName.textContent = `Welcome back, ${username}!`;
+
+                // Set user avatar to first letter of username
+                const avatar = document.getElementById('user-avatar');
+                avatar.textContent = username.charAt(0).toUpperCase();
             } else {
-                menuIconContainer.classList.add('hidden');
+                // Show login button, hide user menu and other logged-in elements
+                profileIconContainer.classList.remove('hidden');
+                userMenuContainer.classList.add('hidden');
+                searchContainer.classList.add('hidden');
+                searchContainer.classList.remove('flex');
+                locationContainer.classList.add('hidden');
+                locationContainer.classList.remove('flex');
+                notificationsContainer.classList.add('hidden');
+
+                // Update welcome banner
+                if (guestCta) guestCta.classList.remove('hidden');
+                if (userCta) userCta.classList.add('hidden');
             }
         }
 
@@ -764,7 +963,7 @@
             const username = document.getElementById('registerUsername').value;
             const email = document.getElementById('registerEmail').value;
             // Step 1: Send OTP
-            const res = await fetch('http://localhost:8080/api/auth/send-otp', {
+            const res = await fetch('/api/auth/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -774,7 +973,7 @@
                 // Prompt user for OTP (and username if needed)
                 const otp = prompt('Enter the OTP sent to your email:');
                 // Step 2: Verify OTP and set username
-                const verifyRes = await fetch('http://localhost:8080/api/auth/verify-otp', {
+                const verifyRes = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, otp, username })
@@ -800,7 +999,7 @@
             const email = document.getElementById('registerEmail').value;
             const username = document.getElementById('newUsername').value;
             const mobile = document.getElementById('newMobile').value;
-            const res = await fetch('http://localhost:8080/api/auth/complete-registration', {
+            const res = await fetch('/api/auth/complete-registration', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, username, mobile })
@@ -818,7 +1017,7 @@
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            const res = await fetch('http://backend:5000/api/auth/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -876,9 +1075,53 @@
             }
 
             // Menu button event listener
-            document.getElementById('menu-btn').addEventListener('click', function () {
-                window.location.href = 'menu-page.html';
-            });
+            const menuBtn = document.getElementById('menu-btn');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function () {
+                    window.location.href = 'menu-page.html';
+                });
+            }
+
+            // User menu dropdown functionality
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', function () {
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function (event) {
+                    if (!userMenuBtn.contains(event.target) && !userDropdown.contains(event.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Logout functionality
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function () {
+                    // Clear all user data
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('userId');
+
+                    // Update UI
+                    updateUIForLoginStatus();
+
+                    // Hide dropdown
+                    userDropdown.classList.add('hidden');
+
+                    // Show success message
+                    alert('You have been logged out successfully!');
+
+                    // Optionally redirect to home or login page
+                    window.location.reload();
+                });
+            }
         };
 
         // Initialize the app
@@ -932,7 +1175,7 @@
         }
 
         if (isLoggedIn()) {
-            fetch('http://backend:5000/api/cart', {
+            fetch('/api/cart', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -141,97 +141,223 @@
 
 <body class="min-h-screen flex flex-col">
     <!-- Header with Logo -->
-    <header class="bg-[#18181b] shadow-md sticky top-0 z-50 flex items-center px-6 py-3">
-        <a href="index.html"
-            class="text-2xl font-bold text-white hover:text-orange-400 transition-colors duration-200">VitalBites</a>
+    <header class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                            VitalBites
+                        </h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Fresh • Fast • Delicious</p>
+                    </div>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div id="progress-container" class="hidden md:flex items-center space-x-4 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <div id="step1"
+                            class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                            1</div>
+                        <span class="text-gray-400">Email</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-gray-600"></div>
+                    <div class="flex items-center space-x-2">
+                        <div id="step2"
+                            class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-gray-400 text-xs font-bold">
+                            2</div>
+                        <span class="text-gray-400">Verify</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-gray-600"></div>
+                    <div class="flex items-center space-x-2">
+                        <div id="step3"
+                            class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-gray-400 text-xs font-bold">
+                            3</div>
+                        <span class="text-gray-400">Complete</span>
+                    </div>
+                </div>
+
+                <!-- Back to Home -->
+                <button onclick="window.location.href='index.html'"
+                    class="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hidden md:block">Back to Home</span>
+                </button>
+            </div>
+        </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-card rounded-xl shadow-2xl p-8 w-full max-w-md fade-in relative overflow-hidden">
+    <main class="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div
+            class="bg-card rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in relative overflow-hidden backdrop-blur-sm border border-gray-700">
             <!-- Decorative elements -->
-            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-orange-500 opacity-10"></div>
-            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-orange-500 opacity-10"></div>
+            <div
+                class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br from-orange-500 to-red-500 opacity-10">
+            </div>
+            <div
+                class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-gradient-to-br from-orange-500 to-red-500 opacity-10">
+            </div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
 
             <div class="relative z-10">
                 <div class="text-center mb-8">
-                    <div
-                        class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center border-2 border-orange-500">
-                        <i class="fas fa-user text-orange-500 text-3xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white">Welcome</h2>
-                    <p class="text-gray-400 mt-2">Login to access your account</p>
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome Back!</h2>
+                    <p class="text-gray-400">Sign in to continue your culinary journey</p>
                 </div>
 
                 <form id="loginForm" class="space-y-6">
-                    <!-- Mobile Section -->
-                    <div id="mobileSection">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="email" class="block mb-2 text-sm font-medium text-gray-400">Email Address</label>
+                    <!-- Email Section -->
+                    <div id="emailSection">
+                        <div class="space-y-6">
+                            <div class="relative">
+                                <label for="email" class="block mb-3 text-sm font-medium text-gray-300">
+                                    <i class="fas fa-envelope mr-2 text-orange-500"></i>
+                                    Email Address
+                                </label>
                                 <input type="email" id="email" name="email" required
-                                    class="w-full px-4 py-3 rounded border border-custom input-field focus:outline-none"
-                                    placeholder="you@example.com">
-                                <div id="emailError" class="hidden"></div>
+                                    class="w-full px-4 py-4 rounded-xl border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 text-white placeholder-gray-500"
+                                    placeholder="Enter your email address">
+                                <div id="emailError" class="hidden mt-2 text-red-400 text-sm"></div>
                             </div>
 
                             <button type="button" id="sendOtpBtn"
-                                class="w-full btn-primary py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
-                                <span>Send OTP</span>
+                                class="w-full btn-primary py-4 rounded-xl font-semibold flex items-center justify-center space-x-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                <span>Send Verification Code</span>
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
 
-                        <div class="mt-6 text-center">
-                            <p class="text-sm text-gray-400">By continuing, you agree to our
-                                <a href="terms.html" class="text-primary hover:underline" target="_blank">Terms</a> and
-                                <a href="privacy.html" class="text-primary hover:underline" target="_blank">Privacy Policy</a>
+                        <div class="mt-8 text-center space-y-3">
+                            <p class="text-sm text-gray-400">New to VitalBites?</p>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                By continuing, you agree to our
+                                <a href="#"
+                                    class="text-orange-400 hover:text-orange-300 underline transition-colors">Terms of
+                                    Service</a> and
+                                <a href="#"
+                                    class="text-orange-400 hover:text-orange-300 underline transition-colors">Privacy
+                                    Policy</a>
                             </p>
                         </div>
                     </div>
 
                     <!-- OTP Section -->
                     <div id="otpSection" class="hidden">
-                        <div class="space-y-4">
+                        <div class="space-y-6">
                             <div class="text-center">
-                                <p class="text-gray-400">OTP sent to <span id="emailDisplay"></span></p>
-                                <a href="#" id="changeEmail" class="text-primary text-sm hover:underline">Change email</a>
+                                <h3 class="text-xl font-semibold text-white mb-2">Verify Your Email</h3>
+                                <p class="text-gray-400 mb-1">We've sent a 6-digit code to</p>
+                                <p class="text-orange-400 font-medium" id="emailDisplay"></p>
+                                <button type="button" id="changeEmail"
+                                    class="text-orange-400 text-sm hover:text-orange-300 underline mt-2 transition-colors">
+                                    Change email
+                                </button>
                             </div>
 
                             <div>
-                                <label for="otp" class="block mb-2 text-sm font-medium text-gray-400">Enter 6-digit
-                                    OTP</label>
-                                <div class="flex space-x-2">
+                                <label class="block mb-4 text-sm font-medium text-gray-300 text-center">
+                                    <i class="fas fa-key mr-2 text-orange-500"></i>
+                                    Enter 6-digit verification code
+                                </label>
+                                <div class="flex space-x-3 justify-center">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                     <input type="text" maxlength="1" pattern="[0-9]"
-                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                        class="w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 otp-digit">
                                 </div>
                                 <input type="hidden" id="otp" name="otp">
-                                <div id="otpError" class="hidden"></div>
+                                <div id="otpError" class="hidden mt-3 text-red-400 text-sm text-center"></div>
                             </div>
 
                             <button type="submit" id="verifyOtpBtn"
-                                class="w-full btn-primary py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
-                                <span>Verify OTP</span>
-                                <i class="fas fa-check"></i>
+                                class="w-full btn-primary py-4 rounded-xl font-semibold flex items-center justify-center space-x-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                <span>Verify & Continue</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+
+                            <div class="text-center space-y-2">
+                                <p class="text-sm text-gray-400">
+                                    Didn't receive the code?
+                                </p>
+                                <button type="button" id="resendOtp"
+                                    class="text-orange-400 hover:text-orange-300 font-medium transition-colors">
+                                    Resend verification code
+                                </button>
+                                <p id="countdown" class="text-xs text-gray-500 hidden">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Resend available in <span id="timer" class="font-medium text-orange-400">30</span>
+                                    seconds
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Details Section (for new users) -->
+                    <div id="userDetailsSection" class="hidden">
+                        <div class="space-y-6">
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold text-white mb-2">Complete Your Profile</h3>
+                                <p class="text-gray-400">Just a few more details to get you started</p>
+                            </div>
+
+                            <div class="relative">
+                                <label for="userName" class="block mb-3 text-sm font-medium text-gray-300">
+                                    <i class="fas fa-user mr-2 text-orange-500"></i>
+                                    Full Name
+                                </label>
+                                <input type="text" id="userName" name="userName" required
+                                    class="w-full px-4 py-4 rounded-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 placeholder-gray-500"
+                                    placeholder="Enter your full name">
+                                <div id="nameError" class="hidden mt-2 text-red-400 text-sm"></div>
+                                <div id="nameSuccess" class="hidden mt-2 text-green-400 text-sm">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Name looks good!
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <label for="userMobile" class="block mb-3 text-sm font-medium text-gray-300">
+                                    <i class="fas fa-mobile-alt mr-2 text-orange-500"></i>
+                                    Indian Mobile Number
+                                </label>
+                                <div class="flex">
+                                    <span
+                                        class="inline-flex items-center px-4 rounded-l-xl border-2 border-r-0 border-gray-600 bg-gray-700 text-gray-300 font-medium">
+                                        +91
+                                    </span>
+                                    <input type="tel" id="userMobile" name="userMobile" required
+                                        class="w-full px-4 py-4 rounded-r-xl border-2 border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 placeholder-gray-500"
+                                        placeholder="Enter 10-digit number" maxlength="10" pattern="[6-9][0-9]{9}">
+                                </div>
+                                <div id="mobileError" class="hidden mt-2 text-red-400 text-sm"></div>
+                                <div id="mobileSuccess" class="hidden mt-2 text-green-400 text-sm">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Mobile number is valid!
+                                </div>
+                            </div>
+
+                            <button type="button" id="completeRegistrationBtn"
+                                class="w-full btn-primary py-4 rounded-xl font-semibold flex items-center justify-center space-x-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                <span>Complete Registration</span>
+                                <i class="fas fa-arrow-right"></i>
                             </button>
 
                             <div class="text-center">
-                                <p class="text-sm text-gray-400">
-                                    Didn't receive OTP?
-                                    <a href="#" id="resendOtp" class="text-primary hover:underline">Resend OTP</a>
-                                </p>
-                                <p id="countdown" class="text-xs text-gray-500 mt-1 hidden">Resend OTP in <span
-                                        id="timer">30</span>s</p>
+                                <button type="button" id="backToOtp"
+                                    class="text-orange-400 text-sm hover:text-orange-300 underline transition-colors">
+                                    <i class="fas fa-arrow-left mr-1"></i>Back to verification
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -248,22 +374,156 @@
     </footer>
 
     <script>
+        // Progress Indicator Functions
+        function updateProgress(step) {
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+
+            // Reset all steps
+            [step1, step2, step3].forEach(s => {
+                s.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold';
+            });
+
+            if (step >= 1) {
+                step1.classList.add('bg-orange-500', 'text-white');
+                step1.innerHTML = '<i class="fas fa-check text-xs"></i>';
+            } else {
+                step1.classList.add('bg-gray-600', 'text-gray-400');
+                step1.textContent = '1';
+            }
+
+            if (step >= 2) {
+                step2.classList.add('bg-orange-500', 'text-white');
+                if (step === 2) {
+                    step2.textContent = '2';
+                } else {
+                    step2.innerHTML = '<i class="fas fa-check text-xs"></i>';
+                }
+            } else {
+                step2.classList.add('bg-gray-600', 'text-gray-400');
+                step2.textContent = '2';
+            }
+
+            if (step >= 3) {
+                step3.classList.add('bg-orange-500', 'text-white');
+                step3.textContent = '3';
+            } else {
+                step3.classList.add('bg-gray-600', 'text-gray-400');
+                step3.textContent = '3';
+            }
+        }
+
         // DOM Elements
-        const emailSection = document.getElementById('mobileSection');
+        const emailSection = document.getElementById('emailSection');
         const otpSection = document.getElementById('otpSection');
+        const userDetailsSection = document.getElementById('userDetailsSection');
         const sendOtpBtn = document.getElementById('sendOtpBtn');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const completeRegistrationBtn = document.getElementById('completeRegistrationBtn');
         const loginForm = document.getElementById('loginForm');
         const resendOtp = document.getElementById('resendOtp');
         const changeEmail = document.getElementById('changeEmail');
+        const backToOtp = document.getElementById('backToOtp');
         const emailInput = document.getElementById('email');
         const otpInput = document.getElementById('otp');
+        const userNameInput = document.getElementById('userName');
+        const userMobileInput = document.getElementById('userMobile');
         const emailDisplay = document.getElementById('emailDisplay');
         const countdown = document.getElementById('countdown');
         const timer = document.getElementById('timer');
         const otpDigits = document.querySelectorAll('.otp-digit');
         const emailError = document.getElementById('emailError');
         const otpError = document.getElementById('otpError');
+        const nameError = document.getElementById('nameError');
+        const mobileError = document.getElementById('mobileError');
+        const nameSuccess = document.getElementById('nameSuccess');
+        const mobileSuccess = document.getElementById('mobileSuccess');
+
+        // Real-time validation for name input
+        userNameInput.addEventListener('input', function (e) {
+            const name = e.target.value.trim();
+
+            // Clear previous states
+            nameError.classList.add('hidden');
+            nameSuccess.classList.add('hidden');
+            e.target.classList.remove('border-red-500', 'border-green-500');
+
+            if (name.length === 0) {
+                return; // Don't validate empty input
+            }
+
+            if (name.length < 2) {
+                showFieldError('name', 'Name must be at least 2 characters long');
+                return;
+            }
+
+            if (name.length > 50) {
+                showFieldError('name', 'Name must be less than 50 characters');
+                return;
+            }
+
+            if (!/^[a-zA-Z\s]*$/.test(name)) {
+                showFieldError('name', 'Name can only contain letters and spaces');
+                return;
+            }
+
+            // Valid name
+            showFieldSuccess('name');
+        });
+
+        // Real-time validation for mobile input
+        userMobileInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
+            e.target.value = value;
+
+            // Clear previous states
+            mobileError.classList.add('hidden');
+            mobileSuccess.classList.add('hidden');
+            e.target.classList.remove('border-red-500', 'border-green-500');
+
+            if (value.length === 0) {
+                return; // Don't validate empty input
+            }
+
+            if (value.length < 10) {
+                showFieldError('mobile', `Enter ${10 - value.length} more digit${10 - value.length > 1 ? 's' : ''}`);
+                return;
+            }
+
+            if (value.length === 10) {
+                if (!/^[6-9]/.test(value)) {
+                    showFieldError('mobile', 'Mobile number must start with 6, 7, 8, or 9');
+                    return;
+                }
+
+                // Valid mobile
+                showFieldSuccess('mobile');
+            }
+        });
+
+        // Helper functions for field validation
+        function showFieldError(field, message) {
+            if (field === 'name') {
+                nameError.textContent = message;
+                nameError.classList.remove('hidden');
+                userNameInput.classList.add('border-red-500');
+            } else if (field === 'mobile') {
+                mobileError.textContent = message;
+                mobileError.classList.remove('hidden');
+                userMobileInput.classList.add('border-red-500');
+            }
+        }
+
+        function showFieldSuccess(field) {
+            if (field === 'name') {
+                nameSuccess.classList.remove('hidden');
+                userNameInput.classList.add('border-green-500');
+            } else if (field === 'mobile') {
+                mobileSuccess.classList.remove('hidden');
+                userMobileInput.classList.add('border-green-500');
+            }
+        }
 
         // OTP Digit Input Handling
         otpDigits.forEach((digit, index) => {
@@ -293,14 +553,37 @@
                 otp += digit.value;
             });
             otpInput.value = otp;
+            console.log('Updated hidden OTP:', otp, 'Length:', otp.length);
+        }
+
+        // Email validation function
+        function isValidEmail(email) {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return emailPattern.test(email);
+        }
+
+        // Indian mobile number validation
+        function isValidIndianMobile(mobile) {
+            const mobilePattern = /^[6-9]\d{9}$/;
+            return mobilePattern.test(mobile);
+        }
+
+        // Name validation
+        function isValidName(name) {
+            const namePattern = /^[a-zA-Z\s]{2,50}$/;
+            return namePattern.test(name.trim());
         }
 
         // Send OTP
         sendOtpBtn.onclick = async function () {
             const email = emailInput.value.trim();
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-            if (!emailPattern.test(email)) {
+            if (!email) {
+                showError(emailInput, emailError, 'Please enter your email address');
+                return;
+            }
+
+            if (!isValidEmail(email)) {
                 showError(emailInput, emailError, 'Please enter a valid email address');
                 return;
             }
@@ -316,18 +599,19 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
+                    updateProgress(2);
                     emailDisplay.textContent = email;
                     emailSection.classList.add('hidden');
                     otpSection.classList.remove('hidden');
                     otpSection.classList.add('animate__animated', 'animate__fadeIn');
                     startCountdown();
                     otpDigits[0].focus();
-                    showAlert('OTP sent successfully to ' + email, 'success');
+                    showAlert('Verification code sent successfully to ' + email, 'success');
                 } else {
                     showError(emailInput, emailError, data.error || 'Failed to send OTP');
                 }
             } catch (err) {
-                showError(emailInput, emailError, 'Network error');
+                showError(emailInput, emailError, 'Network error. Please check your connection.');
             } finally {
                 sendOtpBtn.disabled = false;
                 sendOtpBtn.innerHTML = '<span>Send OTP</span> <i class="fas fa-paper-plane"></i>';
@@ -360,11 +644,18 @@
         // Verify OTP
         loginForm.onsubmit = async function (e) {
             e.preventDefault();
+            console.log('Form submitted - OTP verification started');
+
+            // Update the hidden OTP field first
+            updateHiddenOtp();
 
             const email = emailInput.value.trim();
             const otp = otpInput.value;
 
+            console.log('Email:', email, 'OTP:', otp);
+
             if (otp.length !== 6) {
+                console.log('Invalid OTP length:', otp.length);
                 showError(otpDigits[0], otpError, 'Please enter a valid 6-digit OTP');
                 otpDigits.forEach(digit => {
                     digit.classList.add('shake');
@@ -375,6 +666,7 @@
                 return;
             }
 
+            console.log('OTP validation passed, sending request...');
             verifyOtpBtn.disabled = true;
             verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
@@ -385,24 +677,172 @@
                     body: JSON.stringify({ email, otp })
                 });
                 const data = await res.json();
-                if (res.ok && data.token) {
-                    localStorage.setItem('token', data.token);
-                    showAlert('Login successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1500);
-                } else if (data.needDetails) {
-                    showAlert('Please complete your registration.', 'success');
-                    // Optionally show a modal to collect name/mobile and call /api/auth/complete-registration
+
+                console.log('API Response:', data);
+                console.log('Response status:', res.ok);
+                console.log('needDetails:', data.needDetails);
+                console.log('isNewUser:', data.isNewUser);
+                console.log('token:', data.token);
+
+                if (res.ok) {
+                    if (data.needDetails || data.isNewUser) {
+                        console.log('New user - showing details form');
+                        updateProgress(3);
+                        // Store email for completing registration
+                        localStorage.setItem('tempUserEmail', email);
+                        // New user - show details form
+                        otpSection.classList.add('hidden');
+                        userDetailsSection.classList.remove('hidden');
+                        userDetailsSection.classList.add('animate__animated', 'animate__fadeIn');
+                    } else if (data.token) {
+                        console.log('Existing user - redirecting to home');
+                        // Existing user - redirect to home
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('userEmail', email);
+                        if (data.userId) localStorage.setItem('userId', data.userId);
+                        if (data.username) localStorage.setItem('username', data.username);
+
+                        showAlert('Login successful! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        console.log('Unexpected response format:', data);
+                        showError(otpDigits[0], otpError, 'Unexpected server response');
+                    }
                 } else {
+                    console.log('OTP verification failed:', data.error);
                     showError(otpDigits[0], otpError, data.error || 'OTP verification failed');
                 }
             } catch (err) {
-                showError(otpDigits[0], otpError, 'Network error');
+                console.error('Network error:', err);
+                showError(otpDigits[0], otpError, 'Network error. Please try again.');
             } finally {
                 verifyOtpBtn.disabled = false;
                 verifyOtpBtn.innerHTML = '<span>Verify OTP</span> <i class="fas fa-check"></i>';
             }
+        };
+
+        // Add direct click handler for verify button
+        verifyOtpBtn.addEventListener('click', function (e) {
+            console.log('Verify button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Update hidden OTP field
+            updateHiddenOtp();
+
+            // Check if we have 6 digits
+            const otpValue = otpInput.value;
+            console.log('Current OTP value:', otpValue, 'Length:', otpValue.length);
+
+            if (otpValue.length === 6) {
+                console.log('OTP length is correct, triggering form submission');
+                // Trigger form submission
+                const formEvent = new Event('submit', { cancelable: true });
+                loginForm.dispatchEvent(formEvent);
+            } else {
+                console.log('OTP length is incorrect:', otpValue.length);
+                showError(otpDigits[0], otpError, 'Please enter all 6 digits');
+            }
+        });
+
+        // Complete Registration
+        completeRegistrationBtn.onclick = async function () {
+            console.log('Complete registration button clicked');
+
+            // Use the stored email from OTP verification
+            const email = localStorage.getItem('tempUserEmail') || emailInput.value.trim();
+            const name = userNameInput.value.trim();
+            const mobile = userMobileInput.value.trim();
+
+            console.log('Registration data:', { email, name, mobile });
+
+            // Clear previous errors
+            nameError.classList.add('hidden');
+            mobileError.classList.add('hidden');
+            userNameInput.classList.remove('border-red-500');
+            userMobileInput.classList.remove('border-red-500');
+
+            let hasErrors = false;
+
+            // Validate name
+            if (!name) {
+                showFieldError('name', 'Please enter your full name');
+                hasErrors = true;
+            } else if (!isValidName(name)) {
+                showFieldError('name', 'Name must be 2-50 characters with letters only');
+                hasErrors = true;
+            }
+
+            // Validate mobile
+            if (!mobile) {
+                showFieldError('mobile', 'Please enter your mobile number');
+                hasErrors = true;
+            } else if (!isValidIndianMobile(mobile)) {
+                showFieldError('mobile', 'Please enter a valid 10-digit mobile number starting with 6-9');
+                hasErrors = true;
+            }
+
+            if (hasErrors) {
+                console.log('Validation failed');
+                return;
+            }
+
+            console.log('Validation passed, sending registration request...');
+            completeRegistrationBtn.disabled = true;
+            completeRegistrationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing Registration...';
+
+            try {
+                const res = await fetch('/api/auth/complete-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        username: name,
+                        mobile: `+91${mobile}`
+                    })
+                });
+                const data = await res.json();
+
+                console.log('Registration API Response:', data);
+                console.log('Registration response status:', res.ok);
+
+                if (res.ok && data.token) {
+                    console.log('Registration successful, redirecting...');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('userMobile', data.mobile);
+                    if (data.userId) localStorage.setItem('userId', data.userId);
+
+                    // Clean up temporary email
+                    localStorage.removeItem('tempUserEmail');
+
+                    showAlert('Registration completed successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    console.log('Registration failed:', data.error);
+                    showFieldError('name', data.error || 'Registration failed. Please try again.');
+                }
+            } catch (err) {
+                console.error('Registration network error:', err);
+                showFieldError('name', 'Network error. Please check your connection.');
+            } finally {
+                completeRegistrationBtn.disabled = false;
+                completeRegistrationBtn.innerHTML = '<span>Complete Registration</span> <i class="fas fa-arrow-right"></i>';
+            }
+        };        // Back to OTP
+        backToOtp.onclick = function (e) {
+            e.preventDefault();
+            updateProgress(2);
+            // Clear temporary email when going back
+            localStorage.removeItem('tempUserEmail');
+            userDetailsSection.classList.add('hidden');
+            otpSection.classList.remove('hidden');
+            otpSection.classList.add('animate__animated', 'animate__fadeIn');
         };
 
         // Helper Functions
@@ -454,6 +894,26 @@
             }, 3000);
         }
 
+        // Mobile number input formatting
+        userMobileInput.addEventListener('input', function (e) {
+            // Remove non-numeric characters
+            let value = e.target.value.replace(/\D/g, '');
+
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+
+            e.target.value = value;
+        });
+
+        // Name input formatting (only letters and spaces)
+        userNameInput.addEventListener('input', function (e) {
+            // Remove numbers and special characters except spaces
+            let value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+            e.target.value = value;
+        });
+
         function startCountdown() {
             let timeLeft = 30;
             countdown.classList.remove('hidden');
@@ -468,6 +928,11 @@
                 }
             }, 1000);
         }
+
+        // Initialize progress on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateProgress(1);
+        });
     </script>
 </body>
 
