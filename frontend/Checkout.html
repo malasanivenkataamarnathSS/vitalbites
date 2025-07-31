@@ -8,48 +8,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background-color: #18181b !important;
-            color: #f3f4f6 !important;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .bg-white,
-        .bg-gray-100 {
-            background-color: #23232a !important;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
 
-        .text-orange-500 {
-            color: #ff8800 !important;
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
         }
 
-        .border-gray-200 {
-            border-color: #2d2d36 !important;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
-        input,
-        select,
-        textarea {
-            background-color: #23232a !important;
-            color: #f3f4f6 !important;
-            border-color: #2d2d36 !important;
-        }
-
-        .shadow-md,
-        .shadow-lg,
-        .shadow-xl {
-            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.7) !important;
-        }
-
-        .rounded-xl,
-        .rounded-lg,
-        .rounded {
-            background-clip: padding-box;
-        }
-
-        .checkout-card {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
+        /* Animation for checkout sections */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -62,291 +39,543 @@
             }
         }
 
-        .checkout-section {
-            margin-bottom: 2rem;
+        .checkout-card {
+            animation: fadeIn 0.5s ease-out forwards;
+            animation-delay: calc(var(--order) * 0.1s);
         }
 
-        .checkout-summary-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: .5rem;
+        /* Enable dark mode for the entire page */
+        body,
+        .bg-gray-50,
+        .bg-white {
+            background-color: #18181b !important;
+            color: #f3f4f6 !important;
         }
 
-        .checkout-summary-row.total {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #ff8800;
+        .text-gray-800,
+        .text-gray-700,
+        .text-gray-600,
+        .text-gray-500,
+        .text-gray-400,
+        .text-gray-900 {
+            color: #f3f4f6 !important;
         }
 
-        .checkout-summary-row.tax {
-            color: #f59e42;
+        .bg-white,
+        .bg-gray-100,
+        .bg-orange-100,
+        .bg-gray-50,
+        .bg-orange-50 {
+            background-color: #23232a !important;
         }
 
-        .checkout-summary-row label {
-            color: #a1a1aa;
+        .border-gray-200,
+        .border-gray-100,
+        .border-orange-200,
+        .border-gray-300,
+        .border-gray-700 {
+            border-color: #2d2d36 !important;
         }
 
-        .checkout-address label {
-            color: #a1a1aa;
-            font-size: 0.95rem;
+        .shadow-md,
+        .shadow-lg,
+        .shadow-xl {
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.7) !important;
         }
 
-        .checkout-address input,
-        .checkout-address textarea {
-            margin-top: 0.25rem;
-            margin-bottom: 0.75rem;
+        .rounded-full,
+        .rounded-lg,
+        .rounded-xl {
+            background-clip: padding-box;
         }
 
-        .checkout-btn {
-            background: #ff8800 !important;
-            color: #fff !important;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            padding: 0.75rem 0;
-            font-size: 1.1rem;
-            transition: background 0.2s;
+        .hover\:bg-gray-100:hover,
+        .hover\:bg-gray-300:hover,
+        .hover\:bg-gray-900:hover,
+        .hover\:bg-gray-50:hover {
+            background-color: #2d2d36 !important;
         }
 
-        .checkout-btn:hover {
-            background: #ff9900 !important;
+        .bg-orange-500,
+        .hover\:bg-orange-500:hover,
+        .hover\:bg-orange-600:hover,
+        .bg-orange-600 {
+            background-color: #ff8800 !important;
         }
 
-        .item-img {
-            width: 56px;
-            height: 56px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            border: 1px solid #2d2d36;
+        .text-orange-500 {
+            color: #ff8800 !important;
         }
 
-        .item-remove-btn {
-            color: #ef4444;
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-left: 0.5rem;
+        .bg-gray-200 {
+            background-color: #23232a !important;
         }
 
-        .item-remove-btn:hover {
-            color: #ff4d4f;
+        .bg-gray-800 {
+            background-color: #18181b !important;
         }
 
-        @media (max-width: 700px) {
-            .checkout-section {
-                margin-bottom: 1.2rem;
-            }
+        .bg-black {
+            background-color: #101014 !important;
+        }
+
+        .text-white {
+            color: #f3f4f6 !important;
+        }
+
+        .text-red-500 {
+            color: #ff4d4f !important;
+        }
+
+        .bg-gray-900,
+        .hover\:bg-gray-800:hover {
+            background-color: #101014 !important;
+        }
+
+        input,
+        textarea,
+        select {
+            background-color: #23232a !important;
+            color: #f3f4f6 !important;
+            border-color: #2d2d36 !important;
+        }
+
+        /* Scrollbar dark */
+        ::-webkit-scrollbar {
+            background: #23232a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* Progress steps */
+        .step {
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background-color: #ff8800;
+            color: white;
+        }
+
+        .step.completed {
+            background-color: #22c55e;
+            color: white;
         }
     </style>
 </head>
 
-<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+<body class="bg-gray-50 font-sans min-h-screen">
     <!-- Header -->
-    <header class="bg-gray-900 shadow-md sticky top-0 z-50 flex items-center px-6 py-3">
-        <span class="text-2xl font-bold text-white">VitalBites</span>
-    </header>
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col items-center py-8 px-2">
-        <div class="w-full max-w-6xl"> <!-- Increased from max-w-4xl to max-w-6xl -->
-            <!-- 1. Cart Items -->
-            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
-                <!-- Increased padding -->
-                <h2 class="text-2xl font-bold mb-8 text-white flex items-center gap-2">
-                    <i class="fas fa-shopping-basket text-orange-500"></i> Your Order
-                </h2>
-                <div id="cartItems"></div>
-            </section>
-            <!-- 2. Coupon Section -->
-            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
-                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
-                    <i class="fas fa-ticket-alt text-orange-500"></i> Apply Coupon
-                </h3>
-                <form id="couponForm" class="flex gap-3 items-center">
-                    <input type="text" id="couponCode" class="w-full px-3 py-2 rounded border border-gray-200"
-                        placeholder="Enter coupon code" autocomplete="off">
-                    <button type="submit" class="checkout-btn px-4 py-2" style="width:auto;">Apply</button>
-                </form>
-                <div id="couponMsg" class="mt-2 text-sm"></div>
-            </section>
-            <!-- 3. Billing Summary -->
-            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
-                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
-                    <i class="fas fa-file-invoice-dollar text-orange-500"></i> Billing Summary
-                </h3>
-                <div id="summary"></div>
-            </section>
-            <!-- 4. Address Details -->
-            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
-                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
-                    <i class="fas fa-map-marker-alt text-orange-500"></i> Delivery Address
-                </h3>
-                <form id="addressForm" class="checkout-address">
-                    <label>Full Name
-                        <input type="text" id="fullName" class="w-full px-3 py-2 rounded border border-gray-200"
-                            required>
-                    </label>
-                    <label>Mobile Number
-                        <input type="tel" id="mobile" class="w-full px-3 py-2 rounded border border-gray-200"
-                            maxlength="10" pattern="[6-9][0-9]{9}" required>
-                    </label>
-                    <label>Address
-                        <textarea id="address" class="w-full px-3 py-2 rounded border border-gray-200" rows="2"
-                            required></textarea>
-                    </label>
-                    <label>Pincode
-                        <input type="text" id="pincode" class="w-full px-3 py-2 rounded border border-gray-200"
-                            maxlength="6" pattern="[1-9][0-9]{5}" required>
-                    </label>
-                </form>
-            </section>
-            <!-- 5. Place Order Button -->
-            <section class="checkout-section flex justify-end">
-                <button class="checkout-btn w-full" id="placeOrderBtn">
-                    <i class="fas fa-credit-card mr-2"></i>Place Order
-                </button>
-            </section>
+    <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                            VitalBites
+                        </h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Fresh • Fast • Delicious</p>
+                    </div>
+                </div>
+
+                <!-- Center - Progress Steps (hidden on mobile) -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div
+                            class="step active w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+                            1
+                        </div>
+                        <span class="text-gray-300 text-sm">Checkout</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-gray-600"></div>
+                    <div class="flex items-center space-x-2">
+                        <div
+                            class="step w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-gray-400">
+                            2
+                        </div>
+                        <span class="text-gray-400 text-sm">Payment</span>
+                    </div>
+                    <div class="w-8 h-0.5 bg-gray-600"></div>
+                    <div class="flex items-center space-x-2">
+                        <div
+                            class="step w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-bold text-gray-400">
+                            3
+                        </div>
+                        <span class="text-gray-400 text-sm">Complete</span>
+                    </div>
+                </div>
+
+                <!-- Right Navigation -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Back to Menu -->
+                    <button onclick="window.location.href='index.html'"
+                        class="flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 p-3 rounded-lg hover:bg-gray-700 bg-gray-800 group">
+                        <i class="fas fa-arrow-left text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden sm:block font-medium">Back to Menu</span>
+                    </button>
+                </div>
+            </div>
         </div>
-    </main>
-    <script>
-        // Mock cart data
-        let cart = [
-            { id: 1, name: "Classic Cheeseburger", description: "Juicy beef patty with cheese, lettuce, and special sauce", price: 120, quantity: 2, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=999&q=80" },
-            { id: 2, name: "Pepperoni Pizza", description: "Classic pizza with tomato sauce, mozzarella, and pepperoni", price: 250, quantity: 1, image: "https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80" }
-        ];
+    </header>
 
-        // GST rates (India): 5% for food delivery
-        const GST_RATE = 0.05;
-        const DELIVERY_CHARGE = 30;
-        let coupon = null;
-        let couponDiscount = 0;
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Order Details & Forms -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Cart Items -->
+                <section class="bg-white rounded-xl shadow-lg p-6 checkout-card" style="--order: 0">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+                        <i class="fas fa-shopping-basket text-orange-500 mr-3"></i>
+                        Your Order
+                    </h2>
+                    <div id="cart-items-checkout" class="space-y-4">
+                        <!-- Cart items will be populated here -->
+                    </div>
+                </section>
 
-        // Render cart items with quantity controls and delete icon
-        function renderCart() {
-            const cartItemsDiv = document.getElementById('cartItems');
-            if (!cart.length) {
-                cartItemsDiv.innerHTML = '<p class="text-gray-400 text-center py-8">Your cart is empty.</p>';
-                document.getElementById('summary').innerHTML = '';
-                return;
-            }
-            cartItemsDiv.innerHTML = cart.map(item => `
-                <div class="flex items-center gap-4 border-b border-gray-200 py-4">
-                    <img src="${item.image}" alt="${item.name}" class="item-img" />
-                    <div class="flex-1">
-                        <div class="font-semibold text-white">${item.name}</div>
-                        <div class="text-gray-400 text-sm mb-1">${item.description}</div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-orange-500 font-bold">₹${item.price}</span>
-                            <div class="flex items-center gap-1 ml-2">
-                                <button class="px-2 py-1 rounded bg-[#18181b] border border-gray-200 text-lg font-bold text-orange-500 hover:bg-[#23232a]" aria-label="Decrease quantity" onclick="updateQuantity(${item.id}, -1)">-</button>
-                                <span class="mx-2 text-white font-semibold" style="min-width:2rem;display:inline-block;text-align:center;">${item.quantity}</span>
-                                <button class="px-2 py-1 rounded bg-[#18181b] border border-gray-200 text-lg font-bold text-orange-500 hover:bg-[#23232a]" aria-label="Increase quantity" onclick="updateQuantity(${item.id}, 1)">+</button>
-                                <button class="item-remove-btn ml-4" onclick="removeFromCart(${item.id})" title="Remove item" aria-label="Remove item">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                <!-- Delivery Address -->
+                <section class="bg-white rounded-xl shadow-lg p-6 checkout-card" style="--order: 1">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                        <i class="fas fa-map-marker-alt text-orange-500 mr-3"></i>
+                        Delivery Address
+                    </h3>
+                    <form id="address-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                <input type="text" id="fullName"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="Enter your full name" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
+                                <input type="tel" id="mobile"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="Enter 10-digit mobile number" maxlength="10" pattern="[6-9][0-9]{9}"
+                                    required>
                             </div>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                            <textarea id="street" rows="3"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                placeholder="Enter your complete street address" required></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                                <input type="text" id="city"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="City" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                                <input type="text" id="state"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="State" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                                <input type="text" id="pincode"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                    placeholder="Pincode" maxlength="6" pattern="[0-9]{6}" required>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Payment Options -->
+                <section class="bg-white rounded-xl shadow-lg p-6 checkout-card" style="--order: 2">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                        <i class="fas fa-credit-card text-orange-500 mr-3"></i>
+                        Payment Method
+                    </h3>
+                    <div class="space-y-4">
+                        <label
+                            class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-300">
+                            <input type="radio" name="payment" value="cod" class="mr-4 text-orange-500" checked>
+                            <div class="flex items-center">
+                                <i class="fas fa-money-bill-wave text-green-500 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-800">Cash on Delivery</div>
+                                    <div class="text-sm text-gray-600">Pay when your order arrives</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-300">
+                            <input type="radio" name="payment" value="upi" class="mr-4 text-orange-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-mobile-alt text-blue-500 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-800">UPI Payment</div>
+                                    <div class="text-sm text-gray-600">Pay using UPI apps</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-300">
+                            <input type="radio" name="payment" value="card" class="mr-4 text-orange-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-credit-card text-purple-500 text-xl mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-800">Credit/Debit Card</div>
+                                    <div class="text-sm text-gray-600">Pay securely with your card</div>
+                                </div>
+                            </div>
+                        </label>
                     </div>
-                    <div class="flex flex-col items-end">
-                        <span class="font-bold text-white">₹${item.price * item.quantity}</span>
+                </section>
+            </div>
+
+            <!-- Right Column - Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <!-- Order Summary -->
+                    <section class="bg-white rounded-xl shadow-lg p-6 checkout-card" style="--order: 3">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                            <i class="fas fa-file-invoice-dollar text-orange-500 mr-3"></i>
+                            Order Summary
+                        </h3>
+
+                        <div class="space-y-4 mb-6">
+                            <!-- Coupon Section -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Have a coupon?</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="coupon-code"
+                                        class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                        placeholder="Enter coupon code">
+                                    <button type="button" id="apply-coupon"
+                                        class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-300 font-medium">
+                                        Apply
+                                    </button>
+                                </div>
+                                <div id="coupon-message" class="mt-2 text-sm"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bill Details -->
+                        <div class="space-y-3 border-t border-gray-200 pt-4">
+                            <div class="flex justify-between items-center text-gray-700">
+                                <span>Subtotal</span>
+                                <span id="subtotal">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-700">
+                                <span>Delivery Fee</span>
+                                <span id="delivery-fee">₹40.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-gray-700">
+                                <span>Taxes & Fees</span>
+                                <span id="taxes">₹0.00</span>
+                            </div>
+                            <div id="discount-row" class="hidden flex justify-between items-center text-green-600">
+                                <span>Discount</span>
+                                <span id="discount">-₹0.00</span>
+                            </div>
+                            <hr class="border-gray-200">
+                            <div class="flex justify-between items-center text-lg font-bold text-gray-900">
+                                <span>Total Amount</span>
+                                <span id="total-amount">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <button id="place-order"
+                            class="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Place Order
+                        </button>
+
+                        <!-- Estimated Delivery -->
+                        <div class="mt-4 p-3 bg-orange-50 rounded-lg text-center">
+                            <i class="fas fa-clock text-orange-500 mr-2"></i>
+                            <span class="text-sm text-gray-700">Estimated delivery: 25-35 minutes</span>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 py-6 mt-12">
+        <div class="container mx-auto px-6 text-center text-gray-400 text-sm">
+            <p>© 2025 VitalBites. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Load cart from localStorage
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            return cart;
+        }
+
+        // Display cart items in checkout
+        function displayCartItems() {
+            const cart = loadCart();
+            const cartContainer = document.getElementById('cart-items-checkout');
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-shopping-cart text-5xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Your cart is empty</p>
+                        <button onclick="window.location.href='index.html'" 
+                            class="mt-4 bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-all duration-300">
+                            Add Items
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            cartContainer.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div class="flex items-center space-x-4">
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                        <div>
+                            <h4 class="font-medium text-gray-800">${item.name}</h4>
+                            <p class="text-sm text-gray-600">${item.restaurant}</p>
+                            <p class="text-sm text-orange-500 font-medium">₹${item.price.toFixed(2)} each</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-gray-600">Qty: ${item.quantity}</span>
+                        <span class="font-bold text-gray-800">₹${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                 </div>
             `).join('');
-            renderSummary();
+
+            updateOrderSummary();
         }
 
-        // Remove item from cart
-        function removeFromCart(id) {
-            cart = cart.filter(item => item.id !== id);
-            renderCart();
+        // Update order summary
+        function updateOrderSummary() {
+            const cart = loadCart();
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const deliveryFee = subtotal > 0 ? 40 : 0;
+            const taxes = subtotal * 0.05; // 5% tax
+            const total = subtotal + deliveryFee + taxes;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('delivery-fee').textContent = `₹${deliveryFee.toFixed(2)}`;
+            document.getElementById('taxes').textContent = `₹${taxes.toFixed(2)}`;
+            document.getElementById('total-amount').textContent = `₹${total.toFixed(2)}`;
         }
 
-        // Update quantity function
-        function updateQuantity(id, change) {
-            const idx = cart.findIndex(item => item.id === id);
-            if (idx !== -1) {
-                cart[idx].quantity += change;
-                if (cart[idx].quantity < 1) cart[idx].quantity = 1;
-                renderCart();
+        // Apply coupon
+        document.getElementById('apply-coupon').addEventListener('click', function () {
+            const couponCode = document.getElementById('coupon-code').value.trim();
+            const messageEl = document.getElementById('coupon-message');
+
+            if (!couponCode) {
+                messageEl.innerHTML = '<span class="text-red-500">Please enter a coupon code</span>';
+                return;
             }
-        }
 
-        // Coupon logic (mock: "SAVE50" for ₹50 off, "FOOD10" for 10% off)
-        document.getElementById('couponForm').onsubmit = function (e) {
-            e.preventDefault();
-            const code = document.getElementById('couponCode').value.trim().toUpperCase();
-            let msg = "";
-            couponDiscount = 0;
-            if (!cart.length) {
-                msg = '<span class="text-red-400">Add items to cart to apply coupon.</span>';
-            } else if (code === "SAVE50") {
-                coupon = "SAVE50";
-                couponDiscount = 50;
-                msg = '<span class="text-green-400">₹50 off applied!</span>';
-            } else if (code === "FOOD10") {
-                coupon = "FOOD10";
-                couponDiscount = Math.round(getSubtotal() * 0.10);
-                msg = '<span class="text-green-400">10% off applied!</span>';
-            } else if (code === "") {
-                coupon = null;
-                msg = "";
+            // Sample coupon validation
+            const validCoupons = {
+                'SAVE10': { discount: 10, type: 'percentage' },
+                'FLAT50': { discount: 50, type: 'flat' },
+                'WELCOME20': { discount: 20, type: 'percentage' }
+            };
+
+            if (validCoupons[couponCode.toUpperCase()]) {
+                const coupon = validCoupons[couponCode.toUpperCase()];
+                let discount = 0;
+
+                const cart = loadCart();
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+                if (coupon.type === 'percentage') {
+                    discount = subtotal * (coupon.discount / 100);
+                } else {
+                    discount = coupon.discount;
+                }
+
+                document.getElementById('discount-row').classList.remove('hidden');
+                document.getElementById('discount').textContent = `-₹${discount.toFixed(2)}`;
+                messageEl.innerHTML = '<span class="text-green-500">Coupon applied successfully!</span>';
+
+                // Update total
+                const deliveryFee = 40;
+                const taxes = subtotal * 0.05;
+                const total = subtotal + deliveryFee + taxes - discount;
+                document.getElementById('total-amount').textContent = `₹${total.toFixed(2)}`;
             } else {
-                coupon = null;
-                msg = '<span class="text-red-400">Invalid coupon code.</span>';
+                messageEl.innerHTML = '<span class="text-red-500">Invalid coupon code</span>';
             }
-            document.getElementById('couponMsg').innerHTML = msg;
-            renderSummary();
-        };
-
-        function getSubtotal() {
-            return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        }
-
-        // Render summary
-        function renderSummary() {
-            const subtotal = getSubtotal();
-            const gst = Math.round(subtotal * GST_RATE);
-            let discount = couponDiscount;
-            let total = subtotal + gst + DELIVERY_CHARGE - discount;
-            if (total < 0) total = 0;
-            document.getElementById('summary').innerHTML = `
-                <div class="checkout-summary-row"><label>Subtotal</label><span>₹${subtotal}</span></div>
-                <div class="checkout-summary-row tax"><label>GST (5%)</label><span>₹${gst}</span></div>
-                <div class="checkout-summary-row"><label>Delivery Charges</label><span>₹${DELIVERY_CHARGE}</span></div>
-                ${discount > 0 ? `<div class="checkout-summary-row"><label>Coupon Discount</label><span class="text-green-400">-₹${discount}</span></div>` : ""}
-                <div class="checkout-summary-row total"><label>Total</label><span>₹${total}</span></div>
-            `;
-        }
+        });
 
         // Place order
-        document.getElementById('placeOrderBtn').onclick = function () {
-            // Validate address
-            const name = document.getElementById('fullName').value.trim();
-            const mobile = document.getElementById('mobile').value.trim();
-            const address = document.getElementById('address').value.trim();
-            const pincode = document.getElementById('pincode').value.trim();
-            if (!name || !mobile || !address || !pincode) {
-                alert("Please fill all address fields.");
-                return;
-            }
-            if (!/^[6-9]\d{9}$/.test(mobile)) {
-                alert("Please enter a valid 10-digit Indian mobile number.");
-                return;
-            }
-            if (!/^[1-9][0-9]{5}$/.test(pincode)) {
-                alert("Please enter a valid 6-digit pincode.");
-                return;
-            }
-            if (!cart.length) {
-                alert("Your cart is empty.");
-                return;
-            }
-            alert("Order placed successfully!\nThank you for ordering with VitalBites.");
-            // In real app, send order to backend here
-        };
+        document.getElementById('place-order').addEventListener('click', function () {
+            const fullName = document.getElementById('fullName').value;
+            const mobile = document.getElementById('mobile').value;
+            const street = document.getElementById('street').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const pincode = document.getElementById('pincode').value;
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
 
-        // Initial render
-        renderCart();
+            if (!fullName || !mobile || !street || !city || !state || !pincode) {
+                alert('Please fill all address fields');
+                return;
+            }
+
+            if (mobile.length !== 10) {
+                alert('Please enter a valid 10-digit mobile number');
+                return;
+            }
+
+            if (pincode.length !== 6) {
+                alert('Please enter a valid 6-digit pincode');
+                return;
+            }
+
+            const cart = loadCart();
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+                return;
+            }
+
+            // Simulate order placement
+            alert(`Order placed successfully!\n\nDelivery Address: ${fullName}, ${street}, ${city}, ${state} - ${pincode}\nPayment Method: ${paymentMethod.toUpperCase()}\n\nYour order will be delivered in 25-35 minutes.`);
+
+            // Clear cart and redirect
+            localStorage.removeItem('cart');
+            window.location.href = 'index.html';
+        });
+
+        // Check if user is logged in
+        function isLoggedIn() {
+            return !!localStorage.getItem('token');
+        }
+
+        // Initialize page
+        window.onload = function () {
+            // Check if user is logged in, if not redirect to login
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            displayCartItems();
+        };
     </script>
 </body>
 
