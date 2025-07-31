@@ -296,7 +296,7 @@
         }
 
         // Send OTP
-        sendOtpBtn.onclick = function () {
+        sendOtpBtn.onclick = async function () {
             const email = emailInput.value.trim();
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -305,29 +305,33 @@
                 return;
             }
 
-            // Simulate API call
             sendOtpBtn.disabled = true;
             sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
 
-            setTimeout(() => {
+            try {
+                const res = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    emailDisplay.textContent = email;
+                    emailSection.classList.add('hidden');
+                    otpSection.classList.remove('hidden');
+                    otpSection.classList.add('animate__animated', 'animate__fadeIn');
+                    startCountdown();
+                    otpDigits[0].focus();
+                    showAlert('OTP sent successfully to ' + email, 'success');
+                } else {
+                    showError(emailInput, emailError, data.error || 'Failed to send OTP');
+                }
+            } catch (err) {
+                showError(emailInput, emailError, 'Network error');
+            } finally {
                 sendOtpBtn.disabled = false;
                 sendOtpBtn.innerHTML = '<span>Send OTP</span> <i class="fas fa-paper-plane"></i>';
-
-                // Show OTP section
-                emailDisplay.textContent = email;
-                emailSection.classList.add('hidden');
-                otpSection.classList.remove('hidden');
-                otpSection.classList.add('animate__animated', 'animate__fadeIn');
-
-                // Start countdown
-                startCountdown();
-
-                // Focus first OTP digit
-                otpDigits[0].focus();
-
-                // Show success message
-                showAlert('OTP sent successfully to ' + email, 'success');
-            }, 1500);
+            }
         };
 
         // Resend OTP
@@ -354,9 +358,10 @@
         };
 
         // Verify OTP
-        loginForm.onsubmit = function (e) {
+        loginForm.onsubmit = async function (e) {
             e.preventDefault();
 
+            const email = emailInput.value.trim();
             const otp = otpInput.value;
 
             if (otp.length !== 6) {
@@ -370,17 +375,34 @@
                 return;
             }
 
-            // Simulate API verification
             verifyOtpBtn.disabled = true;
             verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
-            setTimeout(() => {
-                // Simulate success
-                showAlert('Login successful! Redirecting...', 'success');
-
-                // In a real app, you would redirect here
-                // window.location.href = "dashboard.html";
-            }, 2000);
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    localStorage.setItem('token', data.token);
+                    showAlert('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else if (data.needDetails) {
+                    showAlert('Please complete your registration.', 'success');
+                    // Optionally show a modal to collect name/mobile and call /api/auth/complete-registration
+                } else {
+                    showError(otpDigits[0], otpError, data.error || 'OTP verification failed');
+                }
+            } catch (err) {
+                showError(otpDigits[0], otpError, 'Network error');
+            } finally {
+                verifyOtpBtn.disabled = false;
+                verifyOtpBtn.innerHTML = '<span>Verify OTP</span> <i class="fas fa-check"></i>';
+            }
         };
 
         // Helper Functions

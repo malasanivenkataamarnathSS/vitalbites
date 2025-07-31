@@ -24,63 +24,110 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Send OTP
+// Send or Resend OTP
 app.post('/api/auth/send-otp', async (req, res) => {
-  console.log('Received OTP request:', req.body);
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email required" });
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-
   let user = await User.findOne({ email });
+  const now = new Date();
+
+  // Resend logic: allow resend only after 30s
+  if (user && user.lastOtpSent && now - user.lastOtpSent < 30 * 1000) {
+    const wait = 30 - Math.floor((now - user.lastOtpSent) / 1000);
+    return res.status(429).json({ error: `Please wait ${wait}s before resending OTP.` });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpires = new Date(now.getTime() + 10 * 60 * 1000); // 10 min
+
   if (!user) {
-    user = await User.create({ email, otp, otpExpires });
-    return res.json({ newUser: true, message: "OTP sent. Please provide username on verification." });
+    user = await User.create({ email, otp, otpExpires, lastOtpSent: now });
   } else {
     user.otp = otp;
     user.otpExpires = otpExpires;
+    user.lastOtpSent = now;
     await user.save();
   }
 
-  // Send email
+  // Send OTP email
   await transporter.sendMail({
     from: process.env.SMTP_EMAIL,
     to: email,
-    subject: 'Your VitalBites OTP',
-    text: `Your OTP is ${otp}. It is valid for 10 minutes.`
+    subject: 'Your VitalBites Login OTP',
+    text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
+    html: `
+      <div style="font-family:Segoe UI,Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #eee;">
+        <h2 style="color:#ff8800;text-align:center;margin-bottom:16px;">VitalBites Login Verification</h2>
+        <p style="font-size:16px;color:#222;text-align:center;">Hello,</p>
+        <p style="font-size:16px;color:#222;text-align:center;">
+          Use the following <b style="font-size:22px;letter-spacing:2px;color:#ff8800;">OTP</b> to log in to your VitalBites account:
+        </p>
+        <div style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#ff8800;text-align:center;margin:24px 0;">
+          ${otp}
+        </div>
+        <p style="font-size:15px;color:#444;text-align:center;">
+          This OTP is valid for <b>10 minutes</b>.<br>
+          If you did not request this, you can safely ignore this email.
+        </p>
+        <hr style="margin:24px 0;">
+        <p style="font-size:13px;color:#888;text-align:center;">Thank you for using VitalBites!</p>
+      </div>
+    `
   }, (err, info) => {
     if (err) {
-      console.error('Error sending email:', err);
+      console.error(`[OTP] Failed to send email to ${email}:`, err);
     } else {
-      console.log('Email sent:', info.response);
+      console.log(`[OTP] Email sent to ${email}:`, info.response);
     }
   });
 
   res.json({ message: "OTP sent" });
 });
 
-// Verify OTP & Register/Login
+// OTP Verification
 app.post('/api/auth/verify-otp', async (req, res) => {
-  const { email, otp, username } = req.body;
+  const { email, otp } = req.body;
   if (!email || !otp) return res.status(400).json({ error: "Missing fields" });
 
   const user = await User.findOne({ email });
   if (!user || user.otp !== otp || user.otpExpires < new Date()) {
+    console.log(`OTP verification failed for: ${email}`);
     return res.status(400).json({ error: "Invalid or expired OTP" });
   }
 
-  // If new user, require username
-  if (!user.username) {
-    if (!username) return res.json({ needUsername: true, message: "Username required for registration" });
-    user.username = username;
+  // New user: prompt for details
+  if (!user.username || !user.mobile) {
+    console.log(`New user detected: ${email}. Prompting for additional details.`);
+    return res.json({ needDetails: true, message: "Username and mobile required for registration" });
   }
 
+  // Existing user: login
   user.otp = undefined;
   user.otpExpires = undefined;
   await user.save();
 
   const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+  console.log(`Existing user login: ${email}. Redirecting to homepage.`);
+  res.json({ token, userId: user._id, username: user.username, role: user.role });
+});
+
+// Complete registration for new user
+app.post('/api/auth/complete-registration', async (req, res) => {
+  const { email, username, mobile } = req.body;
+  if (!email || !username || !mobile) return res.status(400).json({ error: "Missing fields" });
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(400).json({ error: "User not found" });
+
+  user.username = username;
+  user.mobile = mobile;
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  await user.save();
+
+  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+  console.log(`User created: ${email}, Name: ${username}, Mobile: ${mobile}. Redirecting to homepage.`);
   res.json({ token, userId: user._id, username: user.username, role: user.role });
 });
 
@@ -97,3 +144,4 @@ app.get('/api/auth/verify', (req, res) => {
 });
 
 app.listen(5000, () => console.log('Auth Service on 5000'));
+

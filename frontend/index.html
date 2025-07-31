@@ -507,6 +507,18 @@
         <!-- Cart content -->
     </div>
 
+    <!-- Add this modal for new user details -->
+    <div id="detailsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+        <div class="bg-white p-6 rounded shadow-md w-80">
+            <h2 class="text-xl mb-4">Complete Registration</h2>
+            <input id="newUsername" type="text" placeholder="Username" class="w-full mb-2 p-2 border rounded" />
+            <input id="newMobile" type="text" placeholder="Mobile Number" class="w-full mb-4 p-2 border rounded" />
+            <button onclick="completeRegistration()"
+                class="bg-green-500 text-white px-4 py-2 rounded w-full">Submit</button>
+            <button onclick="closeModal('detailsModal')" class="absolute top-2 right-2 text-gray-500">&times;</button>
+        </div>
+    </div>
+
     <script>
         // Sample food data
         const foodItems = [
@@ -751,17 +763,54 @@
         async function register() {
             const username = document.getElementById('registerUsername').value;
             const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const res = await fetch('http://backend:5000/api/auth/register', {
+            // Step 1: Send OTP
+            const res = await fetch('http://localhost:8080/api/auth/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
+                body: JSON.stringify({ email })
             });
+            const data = await res.json();
             if (res.ok) {
-                alert('Registration successful! Please login.');
-                showLogin();
+                // Prompt user for OTP (and username if needed)
+                const otp = prompt('Enter the OTP sent to your email:');
+                // Step 2: Verify OTP and set username
+                const verifyRes = await fetch('http://localhost:8080/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, username })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyRes.ok && verifyData.token) {
+                    localStorage.setItem('token', verifyData.token);
+                    localStorage.setItem('userId', verifyData.userId);
+                    localStorage.setItem('username', verifyData.username);
+                    closeModal('registerModal');
+                    alert('Registration successful!');
+                    updateUIForLoginStatus();
+                } else {
+                    alert(verifyData.message || 'OTP verification failed.');
+                }
             } else {
-                alert('Registration failed.');
+                alert(data.message || 'Failed to send OTP.');
+            }
+        }
+
+        // Complete Registration
+        async function completeRegistration() {
+            const email = document.getElementById('registerEmail').value;
+            const username = document.getElementById('newUsername').value;
+            const mobile = document.getElementById('newMobile').value;
+            const res = await fetch('http://localhost:8080/api/auth/complete-registration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, username, mobile })
+            });
+            const data = await res.json();
+            if (res.ok && data.token) {
+                localStorage.setItem('token', data.token);
+                window.location.href = '/';
+            } else {
+                alert(data.error || 'Registration failed');
             }
         }
 
