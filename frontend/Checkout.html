@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalBites - Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #18181b !important;
+            color: #f3f4f6 !important;
+        }
+
+        .bg-white,
+        .bg-gray-100 {
+            background-color: #23232a !important;
+        }
+
+        .text-orange-500 {
+            color: #ff8800 !important;
+        }
+
+        .border-gray-200 {
+            border-color: #2d2d36 !important;
+        }
+
+        input,
+        select,
+        textarea {
+            background-color: #23232a !important;
+            color: #f3f4f6 !important;
+            border-color: #2d2d36 !important;
+        }
+
+        .shadow-md,
+        .shadow-lg,
+        .shadow-xl {
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.7) !important;
+        }
+
+        .rounded-xl,
+        .rounded-lg,
+        .rounded {
+            background-clip: padding-box;
+        }
+
+        .checkout-card {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .checkout-section {
+            margin-bottom: 2rem;
+        }
+
+        .checkout-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: .5rem;
+        }
+
+        .checkout-summary-row.total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ff8800;
+        }
+
+        .checkout-summary-row.tax {
+            color: #f59e42;
+        }
+
+        .checkout-summary-row label {
+            color: #a1a1aa;
+        }
+
+        .checkout-address label {
+            color: #a1a1aa;
+            font-size: 0.95rem;
+        }
+
+        .checkout-address input,
+        .checkout-address textarea {
+            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .checkout-btn {
+            background: #ff8800 !important;
+            color: #fff !important;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 0;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .checkout-btn:hover {
+            background: #ff9900 !important;
+        }
+
+        .item-img {
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 1px solid #2d2d36;
+        }
+
+        .item-remove-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .item-remove-btn:hover {
+            color: #ff4d4f;
+        }
+
+        @media (max-width: 700px) {
+            .checkout-section {
+                margin-bottom: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-gray-900 shadow-md sticky top-0 z-50 flex items-center px-6 py-3">
+        <span class="text-2xl font-bold text-white">VitalBites</span>
+    </header>
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center py-8 px-2">
+        <div class="w-full max-w-6xl"> <!-- Increased from max-w-4xl to max-w-6xl -->
+            <!-- 1. Cart Items -->
+            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
+                <!-- Increased padding -->
+                <h2 class="text-2xl font-bold mb-8 text-white flex items-center gap-2">
+                    <i class="fas fa-shopping-basket text-orange-500"></i> Your Order
+                </h2>
+                <div id="cartItems"></div>
+            </section>
+            <!-- 2. Coupon Section -->
+            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
+                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                    <i class="fas fa-ticket-alt text-orange-500"></i> Apply Coupon
+                </h3>
+                <form id="couponForm" class="flex gap-3 items-center">
+                    <input type="text" id="couponCode" class="w-full px-3 py-2 rounded border border-gray-200"
+                        placeholder="Enter coupon code" autocomplete="off">
+                    <button type="submit" class="checkout-btn px-4 py-2" style="width:auto;">Apply</button>
+                </form>
+                <div id="couponMsg" class="mt-2 text-sm"></div>
+            </section>
+            <!-- 3. Billing Summary -->
+            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
+                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                    <i class="fas fa-file-invoice-dollar text-orange-500"></i> Billing Summary
+                </h3>
+                <div id="summary"></div>
+            </section>
+            <!-- 4. Address Details -->
+            <section class="bg-white rounded-xl shadow-lg p-10 checkout-card checkout-section">
+                <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-orange-500"></i> Delivery Address
+                </h3>
+                <form id="addressForm" class="checkout-address">
+                    <label>Full Name
+                        <input type="text" id="fullName" class="w-full px-3 py-2 rounded border border-gray-200"
+                            required>
+                    </label>
+                    <label>Mobile Number
+                        <input type="tel" id="mobile" class="w-full px-3 py-2 rounded border border-gray-200"
+                            maxlength="10" pattern="[6-9][0-9]{9}" required>
+                    </label>
+                    <label>Address
+                        <textarea id="address" class="w-full px-3 py-2 rounded border border-gray-200" rows="2"
+                            required></textarea>
+                    </label>
+                    <label>Pincode
+                        <input type="text" id="pincode" class="w-full px-3 py-2 rounded border border-gray-200"
+                            maxlength="6" pattern="[1-9][0-9]{5}" required>
+                    </label>
+                </form>
+            </section>
+            <!-- 5. Place Order Button -->
+            <section class="checkout-section flex justify-end">
+                <button class="checkout-btn w-full" id="placeOrderBtn">
+                    <i class="fas fa-credit-card mr-2"></i>Place Order
+                </button>
+            </section>
+        </div>
+    </main>
+    <script>
+        // Mock cart data
+        let cart = [
+            { id: 1, name: "Classic Cheeseburger", description: "Juicy beef patty with cheese, lettuce, and special sauce", price: 120, quantity: 2, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=999&q=80" },
+            { id: 2, name: "Pepperoni Pizza", description: "Classic pizza with tomato sauce, mozzarella, and pepperoni", price: 250, quantity: 1, image: "https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80" }
+        ];
+
+        // GST rates (India): 5% for food delivery
+        const GST_RATE = 0.05;
+        const DELIVERY_CHARGE = 30;
+        let coupon = null;
+        let couponDiscount = 0;
+
+        // Render cart items with quantity controls and delete icon
+        function renderCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            if (!cart.length) {
+                cartItemsDiv.innerHTML = '<p class="text-gray-400 text-center py-8">Your cart is empty.</p>';
+                document.getElementById('summary').innerHTML = '';
+                return;
+            }
+            cartItemsDiv.innerHTML = cart.map(item => `
+                <div class="flex items-center gap-4 border-b border-gray-200 py-4">
+                    <img src="${item.image}" alt="${item.name}" class="item-img" />
+                    <div class="flex-1">
+                        <div class="font-semibold text-white">${item.name}</div>
+                        <div class="text-gray-400 text-sm mb-1">${item.description}</div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-orange-500 font-bold">₹${item.price}</span>
+                            <div class="flex items-center gap-1 ml-2">
+                                <button class="px-2 py-1 rounded bg-[#18181b] border border-gray-200 text-lg font-bold text-orange-500 hover:bg-[#23232a]" aria-label="Decrease quantity" onclick="updateQuantity(${item.id}, -1)">-</button>
+                                <span class="mx-2 text-white font-semibold" style="min-width:2rem;display:inline-block;text-align:center;">${item.quantity}</span>
+                                <button class="px-2 py-1 rounded bg-[#18181b] border border-gray-200 text-lg font-bold text-orange-500 hover:bg-[#23232a]" aria-label="Increase quantity" onclick="updateQuantity(${item.id}, 1)">+</button>
+                                <button class="item-remove-btn ml-4" onclick="removeFromCart(${item.id})" title="Remove item" aria-label="Remove item">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="font-bold text-white">₹${item.price * item.quantity}</span>
+                    </div>
+                </div>
+            `).join('');
+            renderSummary();
+        }
+
+        // Remove item from cart
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            renderCart();
+        }
+
+        // Update quantity function
+        function updateQuantity(id, change) {
+            const idx = cart.findIndex(item => item.id === id);
+            if (idx !== -1) {
+                cart[idx].quantity += change;
+                if (cart[idx].quantity < 1) cart[idx].quantity = 1;
+                renderCart();
+            }
+        }
+
+        // Coupon logic (mock: "SAVE50" for ₹50 off, "FOOD10" for 10% off)
+        document.getElementById('couponForm').onsubmit = function (e) {
+            e.preventDefault();
+            const code = document.getElementById('couponCode').value.trim().toUpperCase();
+            let msg = "";
+            couponDiscount = 0;
+            if (!cart.length) {
+                msg = '<span class="text-red-400">Add items to cart to apply coupon.</span>';
+            } else if (code === "SAVE50") {
+                coupon = "SAVE50";
+                couponDiscount = 50;
+                msg = '<span class="text-green-400">₹50 off applied!</span>';
+            } else if (code === "FOOD10") {
+                coupon = "FOOD10";
+                couponDiscount = Math.round(getSubtotal() * 0.10);
+                msg = '<span class="text-green-400">10% off applied!</span>';
+            } else if (code === "") {
+                coupon = null;
+                msg = "";
+            } else {
+                coupon = null;
+                msg = '<span class="text-red-400">Invalid coupon code.</span>';
+            }
+            document.getElementById('couponMsg').innerHTML = msg;
+            renderSummary();
+        };
+
+        function getSubtotal() {
+            return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        }
+
+        // Render summary
+        function renderSummary() {
+            const subtotal = getSubtotal();
+            const gst = Math.round(subtotal * GST_RATE);
+            let discount = couponDiscount;
+            let total = subtotal + gst + DELIVERY_CHARGE - discount;
+            if (total < 0) total = 0;
+            document.getElementById('summary').innerHTML = `
+                <div class="checkout-summary-row"><label>Subtotal</label><span>₹${subtotal}</span></div>
+                <div class="checkout-summary-row tax"><label>GST (5%)</label><span>₹${gst}</span></div>
+                <div class="checkout-summary-row"><label>Delivery Charges</label><span>₹${DELIVERY_CHARGE}</span></div>
+                ${discount > 0 ? `<div class="checkout-summary-row"><label>Coupon Discount</label><span class="text-green-400">-₹${discount}</span></div>` : ""}
+                <div class="checkout-summary-row total"><label>Total</label><span>₹${total}</span></div>
+            `;
+        }
+
+        // Place order
+        document.getElementById('placeOrderBtn').onclick = function () {
+            // Validate address
+            const name = document.getElementById('fullName').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const pincode = document.getElementById('pincode').value.trim();
+            if (!name || !mobile || !address || !pincode) {
+                alert("Please fill all address fields.");
+                return;
+            }
+            if (!/^[6-9]\d{9}$/.test(mobile)) {
+                alert("Please enter a valid 10-digit Indian mobile number.");
+                return;
+            }
+            if (!/^[1-9][0-9]{5}$/.test(pincode)) {
+                alert("Please enter a valid 6-digit pincode.");
+                return;
+            }
+            if (!cart.length) {
+                alert("Your cart is empty.");
+                return;
+            }
+            alert("Order placed successfully!\nThank you for ordering with VitalBites.");
+            // In real app, send order to backend here
+        };
+
+        // Initial render
+        renderCart();
+    </script>
+</body>
+
+</html>

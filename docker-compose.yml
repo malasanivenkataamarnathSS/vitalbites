@@ -1,0 +1,62 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo:6
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - auth-service
+      - menu-service
+      - order-service
+      - user-service
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/authdb
+      - JWT_SECRET=supersecret
+    depends_on:
+      - mongodb
+
+  menu-service:
+    build: ./menu-service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/menudb
+    depends_on:
+      - mongodb
+
+  order-service:
+    build: ./order-service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/orderdb
+    depends_on:
+      - mongodb
+
+  user-service:
+    build: ./user-service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/userdb
+    depends_on:
+      - mongodb
+
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  mongo-data:

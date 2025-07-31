@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VitalBites Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" />
+    <style>
+        :root {
+            --sidebar-width: 240px;
+            --sidebar-collapsed: 60px;
+            --primary: #ff8800;
+            --primary-dark: #ff8800;
+            --bg: #18181b;
+            --card: #23232a;
+            --text: #f3f4f6;
+            --muted: #a1a1aa;
+            --border: #2d2d36;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e42;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #23232a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: width 0.2s;
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem 1.25rem 1rem 1.25rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .sidebar .brand i {
+            color: var(--primary);
+            font-size: 2rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .sidebar-nav button {
+            background: none;
+            border: none;
+            color: #f3f4f6;
+            text-align: left;
+            padding: 0.85rem 1.5rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            outline: none;
+            border-radius: 0.5rem 0 0 0.5rem;
+        }
+
+        .sidebar-nav button.active,
+        .sidebar-nav button:focus {
+            background: #23232a;
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+
+        .sidebar-nav button:hover:not(.active) {
+            background: #23232a;
+            color: var(--primary);
+        }
+
+        .sidebar .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            margin: 1rem 0 0 1rem;
+            cursor: pointer;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: var(--sidebar-width);
+            right: 0;
+            top: 0;
+            height: 64px;
+            background: #23232a;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 90;
+            transition: left 0.2s;
+        }
+
+        .sidebar.collapsed~.header {
+            left: var(--sidebar-collapsed);
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .header-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-profile-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.15s;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .header-profile-btn:focus,
+        .header-profile-btn:hover {
+            background: #2d2d36;
+        }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 120%;
+            background: #23232a;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.10);
+            min-width: 180px;
+            z-index: 10;
+            padding: 0.5rem 0;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        .profile-dropdown button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text);
+            text-align: left;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            color: #f3f4f6;
+        }
+
+        .profile-dropdown button:hover,
+        .profile-dropdown button:focus {
+            background: #18181b;
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: 64px;
+            padding: 2rem;
+            flex: 1;
+            min-width: 0;
+            transition: margin-left 0.2s;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .sidebar.collapsed~.header+.main-content {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        .dashboard-welcome {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .dashboard-cards {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--card);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.07);
+            padding: 1.5rem 2rem;
+            min-width: 180px;
+            flex: 1 1 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .dashboard-card .card-title {
+            font-size: 1rem;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .dashboard-card .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .dashboard-card .card-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-left: auto;
+        }
+
+        /* Table */
+        .table-section {
+            margin-bottom: 2rem;
+        }
+
+        .table-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            background: var(--card);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.07);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            background: var(--card);
+            color: var(--text);
+        }
+
+        th,
+        td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 1rem;
+        }
+
+        th {
+            background: #23232a;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.25em 0.75em;
+            border-radius: 999px;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .status.active {
+            background: var(--success);
+        }
+
+        .status.inactive {
+            background: var(--danger);
+        }
+
+        .status.processing {
+            background: var(--warning);
+            color: #fff;
+        }
+
+        .status.delivered {
+            background: var(--success);
+        }
+
+        .status.cancelled {
+            background: var(--danger);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+            transition: color 0.15s;
+        }
+
+        .action-btn:last-child {
+            margin-right: 0;
+        }
+
+        .action-btn:hover,
+        .action-btn:focus {
+            color: var(--danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: fixed;
+                z-index: 100;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-cards {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header {
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                left: -240px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .sidebar.collapsed {
+                width: var(--sidebar-width);
+            }
+
+            .header {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Accessibility focus */
+        .sidebar-nav button:focus-visible,
+        .profile-dropdown button:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar" aria-label="Admin Sidebar">
+            <div class="brand">
+                <span>VitalBites Admin</span>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" tabindex="0">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="sidebar-nav" role="tablist">
+                <button class="active" data-tab="dashboard" aria-selected="true" tabindex="0"><i
+                        class="fas fa-tachometer-alt"></i> Dashboard</button>
+                <button data-tab="users" tabindex="0"><i class="fas fa-users"></i> Users</button>
+                <button data-tab="orders" tabindex="0"><i class="fas fa-receipt"></i> Orders</button>
+                <button data-tab="addresses" tabindex="0"><i class="fas fa-map-marker-alt"></i> Addresses</button>
+                <button data-tab="plans" tabindex="0"><i class="fas fa-crown"></i> Subscription Plans</button>
+                <button data-tab="menu" tabindex="0"><i class="fas fa-hamburger"></i> Menu Items</button>
+                <button data-tab="logout" tabindex="0"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </nav>
+        <!-- Header -->
+        <header class="header" id="header">
+            <div class="header-title">Admin Dashboard</div>
+            <div class="header-profile">
+                <span class="font-semibold text-base text-gray-700" id="adminName">Admin</span>
+                <button class="header-profile-btn" id="profileBtn" aria-haspopup="true" aria-expanded="false"
+                    aria-label="Admin Profile" tabindex="0">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown" role="menu" aria-label="Profile Menu">
+                    <button tabindex="0" onclick="alert('View Profile')"><i class="fas fa-user mr-2"></i> View
+                        Profile</button>
+                    <button tabindex="0" onclick="alert('Settings')"><i class="fas fa-cog mr-2"></i> Settings</button>
+                    <button tabindex="0" onclick="alert('Logged out!')"><i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout</button>
+                </div>
+            </div>
+        </header>
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent" tabindex="0">
+            <!-- Dashboard Tab -->
+            <section id="dashboardTab" class="tab-section">
+                <div class="dashboard-welcome">Welcome, <span id="adminWelcomeName">Admin</span> 👋</div>
+                <div class="dashboard-cards">
+                    <div class="dashboard-card">
+                        <div class="card-title">Total Users</div>
+                        <div class="card-value" id="userCount">0</div>
+                        <i class="fas fa-users card-icon"></i>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Active Users</div>
+                        <div class="card-value" id="activeUserCount">0</div>
+                        <i class="fas fa-user-check card-icon"></i>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Total Orders</div>
+                        <div class="card-value" id="orderCount">0</div>
+                        <i class="fas fa-receipt card-icon"></i>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Delivered Orders</div>
+                        <div class="card-value" id="deliveredOrderCount">0</div>
+                        <i class="fas fa-truck card-icon"></i>
+                    </div>
+                </div>
+                <div class="table-section">
+                    <div class="table-title">Recent Orders</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardOrdersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <!-- Users Tab -->
+            <section id="usersTab" class="tab-section" style="display:none;">
+                <div class="table-section">
+                    <div class="table-title">Users</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <!-- Orders Tab -->
+            <section id="ordersTab" class="tab-section" style="display:none;">
+                <div class="table-section">
+                    <div class="table-title">Orders</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <!-- Addresses Tab -->
+            <section id="addressesTab" class="tab-section" style="display:none;">
+                <div class="table-section">
+                    <div class="table-title">Addresses</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Label</th>
+                                    <th>Address</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="addressesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <!-- Subscription Plans Tab -->
+            <section id="plansTab" class="tab-section" style="display:none;">
+                <div class="table-section">
+                    <div class="table-title">Subscription Plans</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Price</th>
+                                    <th>Benefits</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plansTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <!-- Menu Items Tab -->
+            <section id="menuTab" class="tab-section" style="display:none;">
+                <div class="table-section">
+                    <div class="table-title flex items-center justify-between">
+                        <span>Menu Items</span>
+                        <button id="addMenuBtn" class="action-btn" style="color:var(--primary);font-size:1.1rem;"
+                            aria-label="Add Menu Item">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Price (₹)</th>
+                                    <th>Available</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Add/Edit Menu Item Modal -->
+                <div id="menuModal"
+                    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999;background:rgba(24,24,27,0.85);align-items:center;justify-content:center;">
+                    <form id="menuForm"
+                        style="background:#23232a;padding:2rem 2rem 1.5rem 2rem;border-radius:1rem;max-width:600px;width:98%;box-shadow:0 4px 24px 0 rgba(0,0,0,0.15);color:#f3f4f6;display:flex;flex-direction:column;gap:1rem;position:relative;">
+                        <button type="button" id="closeMenuModal"
+                            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#f3f4f6;font-size:1.3rem;cursor:pointer;"><i
+                                class="fas fa-times"></i></button>
+                        <h3 id="menuModalTitle"
+                            style="margin-bottom:0.5rem;font-size:1.2rem;color:var(--primary);font-weight:600;">Add Menu
+                            Item</h3>
+                        <label>
+                            Name
+                            <input id="menuName" name="name" class="input"
+                                style="width:100%;padding:0.5rem 0.75rem;margin-top:0.25rem;background:#18181b;color:#f3f4f6;border:1px solid #2d2d36;border-radius:0.5rem;"
+                                required />
+                        </label>
+                        <label>
+                            Description
+                            <textarea id="menuDescription" name="description" rows="3"
+                                style="width:100%;padding:0.5rem 0.75rem;margin-top:0.25rem;background:#18181b;color:#f3f4f6;border:1px solid #2d2d36;border-radius:0.5rem;resize:vertical;"
+                                placeholder="Describe the dish, ingredients, taste, etc." required></textarea>
+                        </label>
+                        <label>
+                            Price (₹)
+                            <input id="menuPrice" name="price" type="number" min="1" class="input"
+                                style="width:100%;padding:0.5rem 0.75rem;margin-top:0.25rem;background:#18181b;color:#f3f4f6;border:1px solid #2d2d36;border-radius:0.5rem;"
+                                required />
+                        </label>
+                        <label>
+                            Available
+                            <select id="menuAvailable" name="available" class="input"
+                                style="width:100%;padding:0.5rem 0.75rem;margin-top:0.25rem;background:#18181b;color:#f3f4f6;border:1px solid #2d2d36;border-radius:0.5rem;">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </label>
+                        <label>
+                            Photo
+                            <input id="menuPhoto" name="photo" type="file" accept="image/*"
+                                style="margin-top:0.25rem;color:#f3f4f6;" />
+                        </label>
+                        <div style="display:flex;gap:0.75rem;align-items:center;">
+                            <img id="menuPhotoPreview" src="" alt="Preview"
+                                style="display:none;width:48px;height:48px;object-fit:cover;border-radius:0.5rem;border:1px solid #2d2d36;" />
+                            <span id="menuPhotoName" style="font-size:0.95rem;color:#a1a1aa;"></span>
+                        </div>
+                        <button type="submit" class="action-btn"
+                            style="background:var(--primary);color:#fff;font-weight:600;border-radius:0.5rem;padding:0.6rem 0;margin-top:0.5rem;">Save</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        // Mock Data
+        const adminName = "Amit Kumar";
+        const users = [
+            { id: 1, name: "Amit Kumar", email: "amit.kumar@email.com", role: "Admin", status: "active" },
+            { id: 2, name: "Priya Singh", email: "priya.singh@email.com", role: "User", status: "active" },
+            { id: 3, name: "Rahul Sharma", email: "rahul.sharma@email.com", role: "User", status: "inactive" },
+            { id: 4, name: "Sneha Patel", email: "sneha.patel@email.com", role: "User", status: "active" }
+        ];
+        const orders = [
+            { id: 101, user: "Amit Kumar", status: "Delivered", total: 499, date: "2025-07-28" },
+            { id: 102, user: "Priya Singh", status: "Processing", total: 299, date: "2025-07-29" },
+            { id: 103, user: "Rahul Sharma", status: "Cancelled", total: 199, date: "2025-07-27" },
+            { id: 104, user: "Sneha Patel", status: "Delivered", total: 399, date: "2025-07-26" }
+        ];
+        const addresses = [
+            { id: 1, user: "Amit Kumar", label: "Home", address: "Flat 101, Green Residency, Mumbai" },
+            { id: 2, user: "Priya Singh", label: "Work", address: "2nd Floor, Tech Park, Pune" }
+        ];
+        const plans = [
+            { id: 1, name: "Monthly", price: "₹299", benefits: ["Free Delivery", "Priority Support", "Exclusive Offers"] },
+            { id: 2, name: "Annual", price: "₹2999", benefits: ["Free Delivery", "Priority Support", "Exclusive Offers", "2 Months Free"] }
+        ];
+        const menuItems = [
+            { id: 1, name: "Paneer Tikka", description: "Grilled cottage cheese cubes marinated in spices.", price: 249, available: true, photo: "" },
+            { id: 2, name: "Butter Naan", description: "Soft Indian bread with butter.", price: 49, available: true, photo: "" },
+            { id: 3, name: "Masala Dosa", description: "Crispy rice crepe stuffed with spicy potato.", price: 129, available: false, photo: "" }
+        ];
+
+        // Sidebar toggle for mobile
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+        // Keyboard accessibility for sidebar toggle
+        sidebarToggle.addEventListener('keydown', (e) => {
+            if (e.key === "Enter" || e.key === " ") sidebar.classList.toggle('open');
+        });
+
+        // Tab switching
+        const tabButtons = document.querySelectorAll('.sidebar-nav button');
+        const tabSections = {
+            dashboard: document.getElementById('dashboardTab'),
+            users: document.getElementById('usersTab'),
+            orders: document.getElementById('ordersTab'),
+            addresses: document.getElementById('addressesTab'),
+            plans: document.getElementById('plansTab'),
+            menu: document.getElementById('menuTab')
+        };
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                tabButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                Object.values(tabSections).forEach(sec => sec.style.display = 'none');
+                if (this.dataset.tab === "logout") {
+                    alert("Logged out!");
+                    return;
+                }
+                tabSections[this.dataset.tab].style.display = '';
+                tabSections[this.dataset.tab].focus();
+            });
+            btn.addEventListener('keydown', function (e) {
+                if (e.key === "Enter" || e.key === " ") this.click();
+            });
+        });
+
+        // Profile dropdown
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        profileBtn.addEventListener('click', function (e) {
+            profileDropdown.classList.toggle('show');
+            profileBtn.setAttribute('aria-expanded', profileDropdown.classList.contains('show'));
+        });
+        profileBtn.addEventListener('keydown', function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+                profileDropdown.classList.toggle('show');
+                profileBtn.setAttribute('aria-expanded', profileDropdown.classList.contains('show'));
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('show');
+                profileBtn.setAttribute('aria-expanded', "false");
+            }
+        });
+
+        // Accessibility: close dropdown with Esc
+        document.addEventListener('keydown', function (e) {
+            if (e.key === "Escape") {
+                profileDropdown.classList.remove('show');
+                profileBtn.setAttribute('aria-expanded', "false");
+            }
+        });
+
+        // Render admin name
+        document.getElementById('adminName').textContent = adminName;
+        document.getElementById('adminWelcomeName').textContent = adminName;
+
+        // Dashboard analytics
+        function renderDashboardCards() {
+            document.getElementById('userCount').textContent = users.length;
+            document.getElementById('activeUserCount').textContent = users.filter(u => u.status === "active").length;
+            document.getElementById('orderCount').textContent = orders.length;
+            document.getElementById('deliveredOrderCount').textContent = orders.filter(o => o.status === "Delivered").length;
+        }
+        renderDashboardCards();
+
+        // Dashboard recent orders
+        function renderDashboardOrders() {
+            const tbody = document.getElementById('dashboardOrdersTable');
+            tbody.innerHTML = orders.slice(0, 5).map(order => `
+        <tr>
+          <td>#${order.id}</td>
+          <td>${order.user}</td>
+          <td><span class="status ${order.status.toLowerCase()}">${order.status}</span></td>
+          <td>₹${order.total}</td>
+          <td>${order.date}</td>
+        </tr>
+      `).join('');
+        }
+        renderDashboardOrders();
+
+        // Users Table
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = users.map(user => `
+        <tr>
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td>${user.role}</td>
+          <td><span class="status ${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
+          <td>
+            <button class="action-btn" aria-label="Edit User" onclick="alert('Edit user: ${user.name}')"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" aria-label="Delete User" onclick="alert('Delete user: ${user.name}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+        }
+        renderUsersTable();
+
+        // Orders Table
+        function renderOrdersTable() {
+            const tbody = document.getElementById('ordersTable');
+            tbody.innerHTML = orders.map(order => `
+        <tr>
+          <td>#${order.id}</td>
+          <td>${order.user}</td>
+          <td><span class="status ${order.status.toLowerCase()}">${order.status}</span></td>
+          <td>₹${order.total}</td>
+          <td>${order.date}</td>
+          <td>
+            <button class="action-btn" aria-label="Edit Order" onclick="alert('Edit order: #${order.id}')"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" aria-label="Delete Order" onclick="alert('Delete order: #${order.id}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+        }
+        renderOrdersTable();
+
+        // Addresses Table
+        function renderAddressesTable() {
+            const tbody = document.getElementById('addressesTable');
+            tbody.innerHTML = addresses.map(addr => `
+        <tr>
+          <td>${addr.user}</td>
+          <td>${addr.label}</td>
+          <td>${addr.address}</td>
+          <td>
+            <button class="action-btn" aria-label="Edit Address" onclick="alert('Edit address for: ${addr.user}')"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" aria-label="Delete Address" onclick="alert('Delete address for: ${addr.user}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+        }
+        renderAddressesTable();
+
+        // Plans Table
+        function renderPlansTable() {
+            const tbody = document.getElementById('plansTable');
+            tbody.innerHTML = plans.map(plan => `
+        <tr>
+          <td>${plan.name}</td>
+          <td>${plan.price}</td>
+          <td>
+            <ul style="margin:0;padding-left:1.2em;">
+              ${plan.benefits.map(b => `<li>${b}</li>`).join('')}
+            </ul>
+          </td>
+          <td>
+            <button class="action-btn" aria-label="Edit Plan" onclick="alert('Edit plan: ${plan.name}')"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" aria-label="Delete Plan" onclick="alert('Delete plan: ${plan.name}')"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+        }
+        renderPlansTable();
+
+        // Render Menu Items Table
+        function renderMenuTable() {
+            const tbody = document.getElementById('menuTable');
+            tbody.innerHTML = menuItems.map(item => `
+            <tr>
+                <td>
+                    ${item.photo ? `<img src="${item.photo}" alt="${item.name}" style="width:40px;height:40px;object-fit:cover;border-radius:0.5rem;border:1px solid #2d2d36;" />` : `<span style="display:inline-block;width:40px;height:40px;border-radius:0.5rem;background:#18181b;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#a1a1aa;font-size:1.2rem;"></i></span>`}
+                </td>
+                <td>${item.name}</td>
+                <td style="max-width:220px;white-space:pre-line;overflow:hidden;text-overflow:ellipsis;">${item.description || ""}</td>
+                <td>₹${item.price}</td>
+                <td>
+                    <span class="status ${item.available ? 'active' : 'inactive'}">${item.available ? 'Yes' : 'No'}</span>
+                </td>
+                <td>
+                    <button class="action-btn" aria-label="Edit Menu Item" onclick="editMenuItem(${item.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn" aria-label="Delete Menu Item" onclick="deleteMenuItem(${item.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+        }
+
+        // Show/Hide Menu Modal
+        const menuModal = document.getElementById('menuModal');
+        const menuForm = document.getElementById('menuForm');
+        const addMenuBtn = document.getElementById('addMenuBtn');
+        const closeMenuModal = document.getElementById('closeMenuModal');
+        const menuPhotoInput = document.getElementById('menuPhoto');
+        const menuPhotoPreview = document.getElementById('menuPhotoPreview');
+        const menuPhotoName = document.getElementById('menuPhotoName');
+        let editingMenuId = null;
+
+        addMenuBtn.onclick = function () {
+            editingMenuId = null;
+            menuForm.reset();
+            menuPhotoPreview.style.display = "none";
+            menuPhotoPreview.src = "";
+            menuPhotoName.textContent = "";
+            document.getElementById('menuModalTitle').textContent = "Add Menu Item";
+            menuModal.style.display = "flex";
+        };
+        closeMenuModal.onclick = function () {
+            menuModal.style.display = "none";
+        };
+
+        // Preview photo
+        menuPhotoInput.onchange = function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    menuPhotoPreview.src = ev.target.result;
+                    menuPhotoPreview.style.display = "block";
+                    menuPhotoName.textContent = file.name;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                menuPhotoPreview.style.display = "none";
+                menuPhotoPreview.src = "";
+                menuPhotoName.textContent = "";
+            }
+        };
+
+        // Add/Edit Menu Item
+        menuForm.onsubmit = function (e) {
+            e.preventDefault();
+            const name = document.getElementById('menuName').value.trim();
+            const description = document.getElementById('menuDescription').value.trim();
+            const price = parseInt(document.getElementById('menuPrice').value, 10);
+            const available = document.getElementById('menuAvailable').value === "true";
+            let photo = menuPhotoPreview.src && menuPhotoPreview.style.display === "block" ? menuPhotoPreview.src : "";
+
+            if (!name || !description || !price) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            if (editingMenuId) {
+                // Edit
+                const idx = menuItems.findIndex(i => i.id === editingMenuId);
+                if (idx !== -1) {
+                    menuItems[idx] = { ...menuItems[idx], name, description, price, available, photo };
+                }
+            } else {
+                // Add
+                menuItems.push({
+                    id: Date.now(),
+                    name,
+                    description,
+                    price,
+                    available,
+                    photo
+                });
+            }
+            menuModal.style.display = "none";
+            renderMenuTable();
+        };
+
+        // Edit Menu Item
+        window.editMenuItem = function (id) {
+            const item = menuItems.find(i => i.id === id);
+            if (!item) return;
+            editingMenuId = id;
+            document.getElementById('menuName').value = item.name;
+            document.getElementById('menuDescription').value = item.description || "";
+            document.getElementById('menuPrice').value = item.price;
+            document.getElementById('menuAvailable').value = item.available ? "true" : "false";
+            if (item.photo) {
+                menuPhotoPreview.src = item.photo;
+                menuPhotoPreview.style.display = "block";
+                menuPhotoName.textContent = "";
+            } else {
+                menuPhotoPreview.style.display = "none";
+                menuPhotoPreview.src = "";
+                menuPhotoName.textContent = "";
+            }
+            document.getElementById('menuModalTitle').textContent = "Edit Menu Item";
+            menuModal.style.display = "flex";
+        };
+
+        // Delete Menu Item
+        window.deleteMenuItem = function (id) {
+            if (confirm("Are you sure you want to delete this menu item?")) {
+                const idx = menuItems.findIndex(i => i.id === id);
+                if (idx !== -1) {
+                    menuItems.splice(idx, 1);
+                    renderMenuTable();
+                }
+            }
+        };
+
+        // Keyboard navigation for tabs
+        tabButtons.forEach((btn, idx) => {
+            btn.addEventListener('keydown', function (e) {
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    tabButtons[(idx + 1) % tabButtons.length].focus();
+                }
+                if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length].focus();
+                }
+            });
+        });
+
+        // Initial render
+        renderMenuTable();
+
+        // Close modal on outside click
+        menuModal.addEventListener('click', function (e) {
+            if (e.target === menuModal) menuModal.style.display = "none";
+        });
+    </script>
+</body>
+
+</html>

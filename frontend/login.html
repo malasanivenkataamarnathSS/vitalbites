@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalBites - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary: #ff8800;
+            --primary-dark: #e67a00;
+            --dark: #18181b;
+            --darker: #0f0f11;
+            --light: #f3f4f6;
+            --lighter: #f9fafb;
+            --border: #2d2d36;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .bg-card {
+            background-color: #23232a;
+            background-image: radial-gradient(circle at 25% 25%, #2d2d36 0%, #23232a 100%);
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .border-custom {
+            border-color: var(--border);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 136, 0, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .input-field {
+            background-color: #23232a;
+            color: var(--light);
+            border-color: var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 136, 0, 0.2);
+        }
+
+        .country-code {
+            background-color: #2d2d36;
+            color: var(--light);
+            border-color: var(--border);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 136, 0, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 136, 0, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 136, 0, 0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .error-border {
+            border-color: #ef4444 !important;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+    <!-- Header with Logo -->
+    <header class="bg-[#18181b] shadow-md sticky top-0 z-50 flex items-center px-6 py-3">
+        <a href="index.html"
+            class="text-2xl font-bold text-white hover:text-orange-400 transition-colors duration-200">VitalBites</a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-card rounded-xl shadow-2xl p-8 w-full max-w-md fade-in relative overflow-hidden">
+            <!-- Decorative elements -->
+            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-orange-500 opacity-10"></div>
+            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-orange-500 opacity-10"></div>
+
+            <div class="relative z-10">
+                <div class="text-center mb-8">
+                    <div
+                        class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center border-2 border-orange-500">
+                        <i class="fas fa-user text-orange-500 text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white">Welcome</h2>
+                    <p class="text-gray-400 mt-2">Login to access your account</p>
+                </div>
+
+                <form id="loginForm" class="space-y-6">
+                    <!-- Mobile Section -->
+                    <div id="mobileSection">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="email" class="block mb-2 text-sm font-medium text-gray-400">Email Address</label>
+                                <input type="email" id="email" name="email" required
+                                    class="w-full px-4 py-3 rounded border border-custom input-field focus:outline-none"
+                                    placeholder="you@example.com">
+                                <div id="emailError" class="hidden"></div>
+                            </div>
+
+                            <button type="button" id="sendOtpBtn"
+                                class="w-full btn-primary py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                <span>Send OTP</span>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+
+                        <div class="mt-6 text-center">
+                            <p class="text-sm text-gray-400">By continuing, you agree to our
+                                <a href="terms.html" class="text-primary hover:underline" target="_blank">Terms</a> and
+                                <a href="privacy.html" class="text-primary hover:underline" target="_blank">Privacy Policy</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- OTP Section -->
+                    <div id="otpSection" class="hidden">
+                        <div class="space-y-4">
+                            <div class="text-center">
+                                <p class="text-gray-400">OTP sent to <span id="emailDisplay"></span></p>
+                                <a href="#" id="changeEmail" class="text-primary text-sm hover:underline">Change email</a>
+                            </div>
+
+                            <div>
+                                <label for="otp" class="block mb-2 text-sm font-medium text-gray-400">Enter 6-digit
+                                    OTP</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                    <input type="text" maxlength="1" pattern="[0-9]"
+                                        class="w-full h-14 text-center text-2xl rounded border border-custom input-field focus:outline-none focus:ring-2 focus:ring-orange-400 otp-digit">
+                                </div>
+                                <input type="hidden" id="otp" name="otp">
+                                <div id="otpError" class="hidden"></div>
+                            </div>
+
+                            <button type="submit" id="verifyOtpBtn"
+                                class="w-full btn-primary py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                <span>Verify OTP</span>
+                                <i class="fas fa-check"></i>
+                            </button>
+
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">
+                                    Didn't receive OTP?
+                                    <a href="#" id="resendOtp" class="text-primary hover:underline">Resend OTP</a>
+                                </p>
+                                <p id="countdown" class="text-xs text-gray-500 mt-1 hidden">Resend OTP in <span
+                                        id="timer">30</span>s</p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#18181b] py-6">
+        <div class="container mx-auto px-6 text-center text-gray-400 text-sm">
+            <p>© 2025 VitalBites. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const emailSection = document.getElementById('mobileSection');
+        const otpSection = document.getElementById('otpSection');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const loginForm = document.getElementById('loginForm');
+        const resendOtp = document.getElementById('resendOtp');
+        const changeEmail = document.getElementById('changeEmail');
+        const emailInput = document.getElementById('email');
+        const otpInput = document.getElementById('otp');
+        const emailDisplay = document.getElementById('emailDisplay');
+        const countdown = document.getElementById('countdown');
+        const timer = document.getElementById('timer');
+        const otpDigits = document.querySelectorAll('.otp-digit');
+        const emailError = document.getElementById('emailError');
+        const otpError = document.getElementById('otpError');
+
+        // OTP Digit Input Handling
+        otpDigits.forEach((digit, index) => {
+            digit.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    if (index < otpDigits.length - 1) {
+                        otpDigits[index + 1].focus();
+                    } else {
+                        digit.blur();
+                    }
+                }
+
+                // Update hidden otp field
+                updateHiddenOtp();
+            });
+
+            digit.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                    otpDigits[index - 1].focus();
+                }
+            });
+        });
+
+        function updateHiddenOtp() {
+            let otp = '';
+            otpDigits.forEach(digit => {
+                otp += digit.value;
+            });
+            otpInput.value = otp;
+        }
+
+        // Send OTP
+        sendOtpBtn.onclick = function () {
+            const email = emailInput.value.trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailPattern.test(email)) {
+                showError(emailInput, emailError, 'Please enter a valid email address');
+                return;
+            }
+
+            // Simulate API call
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
+
+            setTimeout(() => {
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = '<span>Send OTP</span> <i class="fas fa-paper-plane"></i>';
+
+                // Show OTP section
+                emailDisplay.textContent = email;
+                emailSection.classList.add('hidden');
+                otpSection.classList.remove('hidden');
+                otpSection.classList.add('animate__animated', 'animate__fadeIn');
+
+                // Start countdown
+                startCountdown();
+
+                // Focus first OTP digit
+                otpDigits[0].focus();
+
+                // Show success message
+                showAlert('OTP sent successfully to ' + email, 'success');
+            }, 1500);
+        };
+
+        // Resend OTP
+        resendOtp.onclick = function (e) {
+            e.preventDefault();
+
+            if (countdown.classList.contains('hidden')) {
+                sendOtpBtn.onclick();
+            }
+        };
+
+        // Change Email
+        changeEmail.onclick = function (e) {
+            e.preventDefault();
+            otpSection.classList.add('hidden');
+            emailSection.classList.remove('hidden');
+            emailSection.classList.add('animate__animated', 'animate__fadeIn');
+
+            // Clear OTP fields
+            otpDigits.forEach(digit => {
+                digit.value = '';
+            });
+            updateHiddenOtp();
+        };
+
+        // Verify OTP
+        loginForm.onsubmit = function (e) {
+            e.preventDefault();
+
+            const otp = otpInput.value;
+
+            if (otp.length !== 6) {
+                showError(otpDigits[0], otpError, 'Please enter a valid 6-digit OTP');
+                otpDigits.forEach(digit => {
+                    digit.classList.add('shake');
+                    setTimeout(() => {
+                        digit.classList.remove('shake');
+                    }, 500);
+                });
+                return;
+            }
+
+            // Simulate API verification
+            verifyOtpBtn.disabled = true;
+            verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            setTimeout(() => {
+                // Simulate success
+                showAlert('Login successful! Redirecting...', 'success');
+
+                // In a real app, you would redirect here
+                // window.location.href = "dashboard.html";
+            }, 2000);
+        };
+
+        // Helper Functions
+        function showError(element, errorElement, message) {
+            // Remove existing error if any
+            if (errorElement.classList.contains('animate__fadeInDown')) {
+                errorElement.classList.remove('animate__fadeInDown');
+                errorElement.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    errorElement.classList.add('hidden');
+                    element.classList.remove('error-border');
+                }, 500);
+            }
+
+            // Create new error message
+            errorElement.innerHTML = '';
+            errorElement.className = 'text-red-400 text-sm mt-1 animate__animated animate__fadeInDown';
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+
+            // Add error border
+            element.classList.add('error-border');
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                errorElement.classList.remove('animate__fadeInDown');
+                errorElement.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    errorElement.classList.add('hidden');
+                    element.classList.remove('error-border');
+                }, 500);
+            }, 5000);
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate__animated animate__fadeInRight ${type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                } text-white`;
+            alertDiv.textContent = message;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.classList.remove('animate__fadeInRight');
+                alertDiv.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 500);
+            }, 3000);
+        }
+
+        function startCountdown() {
+            let timeLeft = 30;
+            countdown.classList.remove('hidden');
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timer.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    countdown.classList.add('hidden');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
