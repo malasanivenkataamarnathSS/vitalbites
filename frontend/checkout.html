@@ -233,10 +233,19 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Cart Items -->
                 <section class="bg-white rounded-xl shadow-lg p-6 checkout-card" style="--order: 0">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
-                        <i class="fas fa-shopping-basket text-orange-500 mr-3"></i>
-                        Your Order
-                    </h2>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-shopping-basket text-orange-500 mr-3"></i>
+                            Your Order
+                        </h2>
+                        <div class="text-right">
+                            <span id="cart-count-display" class="text-sm text-gray-600">0 items</span>
+                            <button onclick="window.location.href='index.html'"
+                                class="ml-4 text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Add More Items
+                            </button>
+                        </div>
+                    </div>
                     <div id="cart-items-checkout" class="space-y-4">
                         <!-- Cart items will be populated here -->
                     </div>
@@ -419,18 +428,40 @@
     </footer>
 
     <script>
-        // Load cart from localStorage
+        // Check authentication on page load
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // User not logged in, redirect to login with return URL
+                localStorage.setItem('returnUrl', 'checkout.html');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Load cart from localStorage (using consistent key with index.html)
         function loadCart() {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
             return cart;
         }
 
         // Display cart items in checkout
         function displayCartItems() {
             const cart = loadCart();
+            console.log('Checkout page - loaded cart items:', cart);
+            console.log('Cart length:', cart.length);
             const cartContainer = document.getElementById('cart-items-checkout');
+            const cartCountDisplay = document.getElementById('cart-count-display');
+
+            // Update cart count display
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (cartCountDisplay) {
+                cartCountDisplay.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+            }
 
             if (cart.length === 0) {
+                console.log('Cart is empty, showing empty message');
                 cartContainer.innerHTML = `
                     <div class="text-center py-8">
                         <i class="fas fa-shopping-cart text-5xl text-gray-300 mb-4"></i>
@@ -444,8 +475,8 @@
                 return;
             }
 
-            cartContainer.innerHTML = cart.map(item => `
-                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+            cartContainer.innerHTML = cart.map((item, index) => `
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 cart-item" data-item-id="${item.id}">
                     <div class="flex items-center space-x-4">
                         <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                         <div>
@@ -454,9 +485,27 @@
                             <p class="text-sm text-orange-500 font-medium">₹${item.price.toFixed(2)} each</p>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="text-gray-600">Qty: ${item.quantity}</span>
-                        <span class="font-bold text-gray-800">₹${(item.price * item.quantity).toFixed(2)}</span>
+                    <div class="flex items-center space-x-4">
+                        <!-- Quantity Controls -->
+                        <div class="flex items-center space-x-2 bg-white rounded-lg border border-gray-300 p-1">
+                            <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
+                                class="w-8 h-8 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 flex items-center justify-center ${item.quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}">
+                                <i class="fas fa-minus text-sm"></i>
+                            </button>
+                            <span class="font-semibold text-lg min-w-[2rem] text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
+                                class="w-8 h-8 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 flex items-center justify-center">
+                                <i class="fas fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                        <!-- Price and Remove -->
+                        <div class="text-right">
+                            <p class="font-bold text-lg text-gray-800">₹${(item.price * item.quantity).toFixed(2)}</p>
+                            <button onclick="removeItem(${item.id})" 
+                                class="text-red-500 hover:text-red-700 transition-all duration-300 text-sm mt-1">
+                                <i class="fas fa-trash mr-1"></i>Remove
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -476,6 +525,76 @@
             document.getElementById('delivery-fee').textContent = `₹${deliveryFee.toFixed(2)}`;
             document.getElementById('taxes').textContent = `₹${taxes.toFixed(2)}`;
             document.getElementById('total-amount').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        // Update item quantity
+        function updateQuantity(itemId, newQuantity) {
+            if (newQuantity <= 0) {
+                removeItem(itemId);
+                return;
+            }
+
+            let cart = loadCart();
+            const itemIndex = cart.findIndex(item => item.id === itemId);
+
+            if (itemIndex !== -1) {
+                cart[itemIndex].quantity = newQuantity;
+                localStorage.setItem('cartItems', JSON.stringify(cart));
+                displayCartItems();
+                showAlert('Cart updated successfully!', 'success');
+            }
+        }
+
+        // Remove item from cart
+        function removeItem(itemId) {
+            let cart = loadCart();
+            cart = cart.filter(item => item.id !== itemId);
+            localStorage.setItem('cartItems', JSON.stringify(cart));
+            displayCartItems();
+            showAlert('Item removed from cart', 'success');
+
+            // If cart becomes empty, show empty state
+            if (cart.length === 0) {
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        }
+
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            const bgColor = {
+                'success': 'bg-green-600',
+                'error': 'bg-red-600',
+                'warning': 'bg-yellow-600',
+                'info': 'bg-blue-600'
+            }[type] || 'bg-blue-600';
+
+            alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white transition-all duration-300 transform translate-x-full ${bgColor}`;
+            alertDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Slide in
+            setTimeout(() => {
+                alertDiv.classList.remove('translate-x-full');
+            }, 100);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 300);
+            }, 4000);
         }
 
         // Apply coupon
@@ -556,8 +675,9 @@
             // Simulate order placement
             alert(`Order placed successfully!\n\nDelivery Address: ${fullName}, ${street}, ${city}, ${state} - ${pincode}\nPayment Method: ${paymentMethod.toUpperCase()}\n\nYour order will be delivered in 25-35 minutes.`);
 
-            // Clear cart and redirect
-            localStorage.removeItem('cart');
+            // Clear cart and redirect to a success page or home
+            localStorage.removeItem('cartItems'); // Using consistent key
+            alert('🎉 Order placed successfully! You will receive a confirmation shortly.');
             window.location.href = 'index.html';
         });
 
@@ -568,12 +688,12 @@
 
         // Initialize page
         window.onload = function () {
-            // Check if user is logged in, if not redirect to login
-            if (!isLoggedIn()) {
-                window.location.href = 'login.html';
-                return;
+            // Check authentication first
+            if (!checkAuth()) {
+                return; // Exit if not authenticated
             }
 
+            // Load and display cart items
             displayCartItems();
         };
     </script>

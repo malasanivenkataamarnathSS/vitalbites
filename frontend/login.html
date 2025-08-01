@@ -781,8 +781,7 @@
                         userDetailsSection.classList.remove('hidden');
                         userDetailsSection.classList.add('animate__animated', 'animate__fadeIn');
                     } else if (data.token) {
-                        console.log('Existing user - redirecting to home');
-                        // Existing user - redirect to home
+                        console.log('Existing user - redirecting');
                         localStorage.setItem('token', data.token);
                         localStorage.setItem('userEmail', email);
                         if (data.userId) localStorage.setItem('userId', data.userId);
@@ -790,7 +789,14 @@
 
                         showAlert('Login successful! Redirecting...', 'success');
                         setTimeout(() => {
-                            window.location.href = 'index.html';
+                            // Check for return URL first
+                            const returnUrl = localStorage.getItem('returnUrl') || new URLSearchParams(window.location.search).get('returnUrl');
+                            if (returnUrl) {
+                                localStorage.removeItem('returnUrl');
+                                window.location.href = returnUrl;
+                            } else {
+                                window.location.href = 'index.html';
+                            }
                         }, 1500);
                     } else {
                         console.log('Unexpected response format:', data);
@@ -907,7 +913,14 @@
 
                     showAlert('Registration completed successfully! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = 'index.html';
+                        // Check for return URL first
+                        const returnUrl = localStorage.getItem('returnUrl') || new URLSearchParams(window.location.search).get('returnUrl');
+                        if (returnUrl) {
+                            localStorage.removeItem('returnUrl');
+                            window.location.href = returnUrl;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
                     }, 1500);
                 } else {
                     console.log('Registration failed:', data.error);

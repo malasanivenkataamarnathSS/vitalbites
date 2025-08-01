@@ -1,0 +1,453 @@
+<!-- Menu Page - HTML, CSS, JS only (no React) -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VitalBites - Menu</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for food cards */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .food-card {
+            animation: fadeIn 0.5s ease-out forwards;
+            animation-delay: calc(var(--order) * 0.1s);
+        }
+
+        /* Enable dark mode for the entire page */
+        body,
+        .bg-gray-50,
+        .bg-white {
+            background-color: #18181b !important;
+            color: #f3f4f6 !important;
+        }
+
+        .text-gray-800,
+        .text-gray-700,
+        .text-gray-600,
+        .text-gray-500,
+        .text-gray-400,
+        .text-gray-900 {
+            color: #f3f4f6 !important;
+        }
+
+        .bg-white,
+        .bg-gray-100,
+        .bg-orange-100,
+        .bg-gray-50,
+        .bg-orange-50 {
+            background-color: #23232a !important;
+        }
+
+        .border-gray-200,
+        .border-gray-100,
+        .border-orange-200,
+        .border-gray-300,
+        .border-gray-700 {
+            border-color: #2d2d36 !important;
+        }
+
+        .shadow-md,
+        .shadow-lg,
+        .shadow-xl {
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.7) !important;
+        }
+
+        .menu-category {
+            scroll-margin-top: 100px;
+        }
+
+        .category-nav {
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                            VitalBites
+                        </h1>
+                        <p class="text-xs text-gray-400 hidden sm:block">Fresh • Fast • Delicious</p>
+                    </div>
+                </div>
+
+                <!-- Right Navigation -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Cart -->
+                    <div class="relative">
+                        <button id="cart-btn"
+                            class="relative p-3 text-gray-300 hover:text-white transition-all duration-300 bg-gray-800 hover:bg-gray-700 rounded-lg group">
+                            <i class="fas fa-shopping-cart text-lg group-hover:scale-110 transition-transform"></i>
+                            <span id="cart-count"
+                                class="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium transition-all">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Back to Home -->
+                    <button onclick="window.location.href='index.html'"
+                        class="flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 p-3 rounded-lg hover:bg-gray-700 bg-gray-800 group">
+                        <i class="fas fa-home text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden sm:block font-medium">Home</span>
+                    </button>
+
+                    <!-- Profile Button -->
+                    <div id="profile-icon-container" class="relative">
+                        <button id="profile-btn"
+                            class="relative p-3 text-gray-300 hover:text-white transition-all duration-300 bg-gray-800 hover:bg-gray-700 rounded-lg group">
+                            <i class="fas fa-user text-lg group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Category Navigation -->
+    <div class="category-nav bg-gray-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8 py-4 overflow-x-auto">
+                <button
+                    class="category-btn text-orange-500 border-b-2 border-orange-500 pb-2 whitespace-nowrap font-medium"
+                    data-category="all">All Items</button>
+                <button class="category-btn text-gray-300 hover:text-white pb-2 whitespace-nowrap"
+                    data-category="starters">Starters</button>
+                <button class="category-btn text-gray-300 hover:text-white pb-2 whitespace-nowrap"
+                    data-category="mains">Main Course</button>
+                <button class="category-btn text-gray-300 hover:text-white pb-2 whitespace-nowrap"
+                    data-category="desserts">Desserts</button>
+                <button class="category-btn text-gray-300 hover:text-white pb-2 whitespace-nowrap"
+                    data-category="beverages">Beverages</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="flex items-center mb-10">
+            <span
+                class="flex items-center justify-center w-12 h-12 rounded-full border-2 border-orange-500 mr-3 bg-[#23232a]">
+                <i class="fas fa-user text-2xl text-orange-500"></i>
+            </span>
+            <span class="font-bold text-lg tracking-wide">VitalBites</span>
+        </div>
+        <nav class="flex flex-col gap-2">
+            <button class="tab-btn active" data-tab="profile">
+                <i class="fas fa-user text-lg"></i> <span class="font-medium">Profile</span>
+            </button>
+            <button class="tab-btn" data-tab="orders">
+                <i class="fas fa-box text-lg"></i> <span class="font-medium">Orders</span>
+            </button>
+            <button class="tab-btn" data-tab="address">
+                <i class="fas fa-map-marker-alt text-lg"></i> <span class="font-medium">Addresses</span>
+            </button>
+            <button class="tab-btn" data-tab="plans">
+                <i class="fas fa-crown text-lg"></i> <span class="font-medium">Subscription</span>
+            </button>
+        </nav>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 p-8 bg-[#18181b] flex justify-center items-start">
+            <div class="w-full max-w-5xl">
+                <!-- Profile Section -->
+                <section id="profile" class="main-card p-8">
+                    <div class="flex flex-col md:flex-row items-center gap-6 mb-6">
+                        <span
+                            class="flex items-center justify-center w-20 h-20 rounded-full border-2 border-orange-500 bg-[#23232a]">
+                            <i class="fas fa-user text-4xl text-orange-500"></i>
+                        </span>
+                        <div class="flex-1 text-center md:text-left">
+                            <h2 id="profileName" class="text-2xl font-bold mb-1">Amit Kumar</h2>
+                            <p id="profileEmail" class="text-gray-400">amit.kumar@email.com</p>
+                            <p id="profilePhone" class="text-gray-400">+91 9876543210</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center md:justify-end">
+                        <button id="editProfileBtn" class="orange-btn px-4 py-2 rounded font-medium mt-4">
+                            <i class="fas fa-edit mr-2"></i>Update Profile
+                        </button>
+                    </div>
+                    <form id="profileForm" class="space-y-4 hidden mt-4">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Name</label>
+                            <input id="editName" class="input w-full px-4 py-2 rounded" value="Amit Kumar" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Email</label>
+                            <input id="editEmail" class="input w-full px-4 py-2 rounded" value="amit.kumar@email.com" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Phone</label>
+                            <input id="editPhone" class="input w-full px-4 py-2 rounded" value="+91 9876543210" />
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="orange-btn px-4 py-2 rounded font-medium">Save</button>
+                            <button type="button" id="cancelEditProfile"
+                                class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded font-medium">Cancel</button>
+                        </div>
+                    </form>
+                </section>
+                <!-- Orders Section -->
+                <section id="orders" class="main-card p-8 hidden">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i class="fas fa-box text-orange-500"></i> Past Orders
+                    </h2>
+                    <div id="ordersList"></div>
+                </section>
+                <!-- Address Section -->
+                <section id="address" class="main-card p-8 hidden">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-orange-500"></i> Delivery Addresses
+                    </h2>
+                    <div id="addressList" class="space-y-4"></div>
+                    <form id="addAddressForm" class="mt-6 space-y-3 hidden">
+                        <div>
+                            <label class="block text-gray-400 mb-1">Label</label>
+                            <input id="newAddressLabel" class="input w-full px-4 py-2 rounded"
+                                placeholder="e.g. Home, Work" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 mb-1">Address</label>
+                            <textarea id="newAddressDetails" class="textarea w-full px-4 py-2 rounded"
+                                placeholder="Full address"></textarea>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="orange-btn px-4 py-2 rounded font-medium">Save</button>
+                            <button type="button" id="cancelAddAddress"
+                                class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded font-medium">Cancel</button>
+                        </div>
+                    </form>
+                    <div class="flex justify-center md:justify-end">
+                        <button id="showAddAddressBtn" class="mt-6 orange-btn px-4 py-2 rounded font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add New Address
+                        </button>
+                    </div>
+                </section>
+                <!-- Subscription Plan Section -->
+                <section id="plans" class="main-card p-8 hidden">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i class="fas fa-crown text-orange-500"></i> Subscription Plans
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="plansList"></div>
+                </section>
+            </div>
+        </main>
+        </div>
+        <script>
+            // Dummy data
+            let orders = [
+                {
+                    id: 1,
+                    status: "Delivered",
+                    items: [
+                        { name: "Paneer Tikka", img: "https://source.unsplash.com/80x80/?paneer", price: 249 },
+                        { name: "Butter Naan", img: "https://source.unsplash.com/80x80/?naan", price: 49 },
+                    ],
+                    eta: "Delivered on 24 Jul",
+                },
+                {
+                    id: 2,
+                    status: "Processing",
+                    items: [
+                        { name: "Masala Dosa", img: "https://source.unsplash.com/80x80/?dosa", price: 129 },
+                    ],
+                    eta: "Arriving in 30 min",
+                },
+            ];
+            let addresses = [
+                { id: 1, label: "Home", details: "Flat 101, Green Residency, Mumbai, 400001" },
+                { id: 2, label: "Work", details: "2nd Floor, Tech Park, Pune, 411045" },
+            ];
+            let plans = [
+                { id: 1, name: "Monthly", price: 299, benefits: ["Free Delivery", "Priority Support", "Exclusive Offers"] },
+                { id: 2, name: "Annual", price: 2999, benefits: ["Free Delivery", "Priority Support", "Exclusive Offers", "2 Months Free"] },
+            ];
+
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = function () {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('main > div > section').forEach(sec => sec.classList.add('hidden'));
+                    document.getElementById(this.dataset.tab).classList.remove('hidden');
+                };
+            });
+
+            // Orders rendering
+            function renderOrders() {
+                const ordersList = document.getElementById('ordersList');
+                if (!orders.length) {
+                    ordersList.innerHTML = '<p class="text-gray-400">No orders yet.</p>';
+                    return;
+                }
+                ordersList.innerHTML = orders.map(order => `
+        <div class="border border-[#2d2d36] rounded-lg p-4 flex flex-col md:flex-row md:items-center gap-4 mb-6">
+          <div class="flex-1 flex flex-wrap gap-4">
+            ${order.items.map(item => `
+              <div class="flex items-center gap-2">
+                <img src="${item.img}" alt="${item.name}" class="w-14 h-14 rounded-lg object-cover"/>
+                <div>
+                  <div class="font-medium">${item.name}</div>
+                  <div class="text-orange-500 font-bold">₹${item.price}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${order.status === "Delivered"
+                        ? "bg-green-600 text-white"
+                        : order.status === "Processing"
+                            ? "bg-yellow-500 text-black"
+                            : "bg-red-600 text-white"
+                    }">${order.status}</span>
+            <span class="text-gray-400 text-sm">${order.eta}</span>
+          </div>
+        </div>
+      `).join('');
+            }
+            renderOrders();
+
+            // Address rendering
+            function renderAddresses() {
+                const addressList = document.getElementById('addressList');
+                if (!addresses.length) {
+                    addressList.innerHTML = '<p class="text-gray-400">No addresses saved.</p>';
+                    return;
+                }
+                addressList.innerHTML = addresses.map(addr => `
+        <div class="border border-[#2d2d36] rounded-lg p-4 flex justify-between items-center">
+          <div>
+            <div class="font-medium">${addr.label}</div>
+            <div class="text-gray-400 text-sm">${addr.details}</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="text-orange-500 hover:text-orange-600" title="Edit" onclick="alert('Edit address feature coming soon!')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="text-red-500 hover:text-red-600" title="Delete" onclick="deleteAddress(${addr.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+            }
+            function deleteAddress(id) {
+                addresses = addresses.filter(a => a.id !== id);
+                renderAddresses();
+            }
+            window.deleteAddress = deleteAddress;
+            renderAddresses();
+
+            // Add Address
+            document.getElementById('showAddAddressBtn').onclick = function () {
+                document.getElementById('addAddressForm').classList.remove('hidden');
+                this.classList.add('hidden');
+            };
+            document.getElementById('cancelAddAddress').onclick = function () {
+                document.getElementById('addAddressForm').classList.add('hidden');
+                document.getElementById('showAddAddressBtn').classList.remove('hidden');
+                document.getElementById('newAddressLabel').value = '';
+                document.getElementById('newAddressDetails').value = '';
+            };
+            document.getElementById('addAddressForm').onsubmit = function (e) {
+                e.preventDefault();
+                const label = document.getElementById('newAddressLabel').value.trim();
+                const details = document.getElementById('newAddressDetails').value.trim();
+                if (!label || !details) {
+                    alert('Please fill all fields.');
+                    return;
+                }
+                addresses.push({ id: Date.now(), label, details });
+                renderAddresses();
+                document.getElementById('addAddressForm').classList.add('hidden');
+                document.getElementById('showAddAddressBtn').classList.remove('hidden');
+                document.getElementById('newAddressLabel').value = '';
+                document.getElementById('newAddressDetails').value = '';
+            };
+
+            // Plans rendering
+            function renderPlans() {
+                const plansList = document.getElementById('plansList');
+                plansList.innerHTML = plans.map(plan => `
+        <div class="border border-[#2d2d36] rounded-lg p-6 flex flex-col items-start">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-crown text-orange-500"></i>
+            <span class="font-bold text-lg">${plan.name}</span>
+          </div>
+          <div class="text-2xl font-bold text-orange-500 mb-2">
+            ₹${plan.price}
+            <span class="text-base text-gray-400 font-normal ml-2">
+              /${plan.name === "Monthly" ? "mo" : "yr"}
+            </span>
+          </div>
+          <ul class="mb-4 text-gray-400 list-disc list-inside">
+            ${plan.benefits.map(b => `<li>${b}</li>`).join('')}
+          </ul>
+          <button class="orange-btn px-4 py-2 rounded font-medium mt-auto">Subscribe</button>
+        </div>
+      `).join('');
+            }
+            renderPlans();
+
+            // Profile edit
+            document.getElementById('editProfileBtn').onclick = function () {
+                document.getElementById('profileForm').classList.remove('hidden');
+                this.classList.add('hidden');
+            };
+            document.getElementById('cancelEditProfile').onclick = function () {
+                document.getElementById('profileForm').classList.add('hidden');
+                document.getElementById('editProfileBtn').classList.remove('hidden');
+            };
+            document.getElementById('profileForm').onsubmit = function (e) {
+                e.preventDefault();
+                document.getElementById('profileName').textContent = document.getElementById('editName').value;
+                document.getElementById('profileEmail').textContent = document.getElementById('editEmail').value;
+                document.getElementById('profilePhone').textContent = document.getElementById('editPhone').value;
+                document.getElementById('profilePic').src = "https://randomuser.me/api/portraits/men/" + Math.floor(Math.random() * 100) + ".jpg";
+                this.classList.add('hidden');
+                document.getElementById('editProfileBtn').classList.remove('hidden');
+            };
+        </script>
+</body>
+
+</html>

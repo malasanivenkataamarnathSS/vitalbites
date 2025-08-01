@@ -661,6 +661,57 @@
         const cartCount = document.getElementById('cart-count');
         const cartItemsContainer = document.getElementById('cart-items');
         const cartTotal = document.getElementById('cart-total');
+
+        // Debug function to check DOM elements
+        function checkDOMElements() {
+            console.log('DOM Elements check:');
+            console.log('- cartBtn:', !!cartBtn);
+            console.log('- cartDropdown:', !!cartDropdown);
+            console.log('- cartCount:', !!cartCount);
+            console.log('- cartItemsContainer:', !!cartItemsContainer);
+            console.log('- cartTotal:', !!cartTotal);
+            console.log('- checkout button:', !!document.querySelector('.checkout-btn'));
+        }
+
+        // Test function to manually add an item (for debugging)
+        function testAddToCart() {
+            console.log('Testing add to cart...');
+            const testItem = {
+                id: 999,
+                name: "Test Item",
+                restaurant: "Test Restaurant",
+                price: 100,
+                image: "https://via.placeholder.com/100"
+            };
+
+            cart.push({ ...testItem, quantity: 1 });
+            updateCart();
+            console.log('Test item added, cart now:', cart);
+        }
+
+        // Function to forcefully reload and sync cart
+        function forceReloadCart() {
+            console.log('🔄 Force reloading cart...');
+            loadCartFromLocal();
+            updateCartDisplay();
+            console.log('🛒 Cart after force reload:', cart);
+            console.log('📦 Cart items count:', cart.length);
+        }
+
+        // Function to check cart persistence
+        function checkCartPersistence() {
+            console.log('=== Cart Persistence Check ===');
+            console.log('Current cart variable:', cart);
+            console.log('LocalStorage cartItems:', localStorage.getItem('cartItems'));
+            console.log('Parsed localStorage:', JSON.parse(localStorage.getItem('cartItems') || '[]'));
+            console.log('Cart count element text:', cartCount ? cartCount.textContent : 'Element not found');
+            console.log('==============================');
+        }
+
+        // Make test functions available globally for console testing
+        window.testAddToCart = testAddToCart;
+        window.checkCartPersistence = checkCartPersistence;
+        window.forceReloadCart = forceReloadCart;
         const cartPopup = document.getElementById('cart-popup');
 
         // Render food items
@@ -778,18 +829,29 @@
 
         // Save/load cart from localStorage for guests
         function saveCartToLocal() {
-            localStorage.setItem('cart', JSON.stringify(cart));
+            console.log('Saving cart to localStorage:', cart);
+            localStorage.setItem('cartItems', JSON.stringify(cart));
         }
         function loadCartFromLocal() {
-            cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const savedCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+            console.log('Loading cart from localStorage:', savedCart);
+            cart = savedCart;
             updateCart();
         }
 
         // Update cart UI
         function updateCart() {
+            console.log('Updating cart UI, cart:', cart);
             // Update cart count
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCount.textContent = totalItems;
+            console.log('Total items:', totalItems);
+
+            if (cartCount) {
+                cartCount.textContent = totalItems;
+                console.log('Updated cart count display to:', totalItems);
+            } else {
+                console.error('cartCount element not found!');
+            }
 
             // Update cart items
             if (cart.length === 0) {
@@ -831,7 +893,22 @@
                 cartTotal.textContent = `₹${total.toFixed(2)}`;
             }
 
+            // Save to localStorage and also update display counter
             saveCartToLocal();
+            updateCartDisplay();
+        }
+
+        // Update cart display elements
+        function updateCartDisplay() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            console.log('Updating cart display, total items:', totalItems);
+
+            if (cartCount) {
+                cartCount.textContent = totalItems;
+                console.log('Cart count updated to:', totalItems);
+            } else {
+                console.error('Cart count element not found!');
+            }
         }
 
         // Toggle cart dropdown
@@ -847,6 +924,42 @@
         cartDropdown.addEventListener('click', function (e) {
             e.stopPropagation();
         });
+
+        // Alert function for user notifications
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            const bgColor = {
+                'success': 'bg-green-600',
+                'error': 'bg-red-600',
+                'warning': 'bg-yellow-600',
+                'info': 'bg-blue-600'
+            }[type] || 'bg-blue-600';
+
+            alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white transition-all duration-300 transform translate-x-full ${bgColor}`;
+            alertDiv.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Slide in
+            setTimeout(() => {
+                alertDiv.classList.remove('translate-x-full');
+            }, 100);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
 
         // Utility to check login status
         function isLoggedIn() {
@@ -884,6 +997,10 @@
                 // Set user avatar to first letter of username
                 const avatar = document.getElementById('user-avatar');
                 avatar.textContent = username.charAt(0).toUpperCase();
+
+                // Reload cart after login
+                console.log('🔄 Reloading cart after login status update...');
+                forceReloadCart();
             } else {
                 // Show login button, hide user menu and other logged-in elements
                 profileIconContainer.classList.remove('hidden');
@@ -996,8 +1113,23 @@
 
         // On page load
         window.onload = function () {
-            updateUIForLoginStatus();
-            loadCartFromLocal();
+            console.log('🌍 Page loaded, initializing...');
+            console.log('🗄️ LocalStorage cartItems on load:', localStorage.getItem('cartItems'));
+
+            checkDOMElements();
+
+            // Delay cart loading to ensure DOM is ready
+            setTimeout(() => {
+                console.log('⏰ Delayed initialization starting...');
+                updateUIForLoginStatus();
+                loadCartFromLocal();
+                updateCartDisplay();
+
+                console.log('✅ Initialization complete');
+                console.log('🛒 Cart after loading:', cart);
+                console.log('📦 Cart length:', cart.length);
+                console.log('💾 LocalStorage cartItems parsed:', JSON.parse(localStorage.getItem('cartItems') || '[]'));
+            }, 100);
 
             // Profile icon click event
             const profileBtn = document.getElementById('profile-btn');
@@ -1006,26 +1138,66 @@
                     e.preventDefault();
                     console.log('Profile button clicked, logged in:', isLoggedIn());
                     if (!isLoggedIn()) {
+                        // Store the return URL for after login
+                        localStorage.setItem('returnUrl', 'profile.html');
                         window.location.href = 'login.html';
                     } else {
-                        window.location.href = 'menu-page.html';
+                        window.location.href = 'profile.html';
                     }
                 });
             }
 
             // Checkout button click event
             const checkoutBtn = document.querySelector('.checkout-btn');
+            console.log('Checkout button element found:', !!checkoutBtn);
             if (checkoutBtn) {
                 checkoutBtn.addEventListener('click', function (e) {
                     e.preventDefault();
-                    console.log('Checkout button clicked, logged in:', isLoggedIn());
-                    if (!isLoggedIn()) {
-                        window.location.href = 'login.html';
+                    console.log('🖱️ Checkout button clicked');
+
+                    // Double-check cart state and reload if necessary
+                    const localStorageItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                    if (cart.length === 0 && localStorageItems.length > 0) {
+                        console.log('⚠️ Cart mismatch detected, forcing reload...');
+                        forceReloadCart();
+                    }
+
+                    // Ensure cart is synchronized with localStorage
+                    loadCartFromLocal();
+
+                    // Check if cart has items using both the global cart variable and localStorage
+                    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+                    console.log('🗂️ Cart items from localStorage:', cartItems);
+                    console.log('🛒 Current cart variable:', cart);
+
+                    // Use the most current data
+                    const currentCartItems = cartItems.length > 0 ? cartItems : cart;
+
+                    if (currentCartItems.length === 0) {
+                        console.log('Cart is empty, showing warning');
+                        showAlert('Your cart is empty! Please add some items first.', 'warning');
                         return;
                     }
+
+                    console.log('Cart has items, checking login status:', isLoggedIn());
+
+                    if (!isLoggedIn()) {
+                        console.log('User not logged in, storing return URL and redirecting to login');
+                        // Store the return URL for after login
+                        localStorage.setItem('returnUrl', 'checkout.html');
+                        showAlert('Please login to proceed with checkout', 'info');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 1000);
+                        return;
+                    }
+
+                    console.log('User is logged in, redirecting to checkout');
                     // Redirect to checkout page
-                    window.location.href = 'Checkout.html';
+                    window.location.href = 'checkout.html';
                 });
+            } else {
+                console.error('Checkout button not found! Check if the .checkout-btn selector is correct.');
             }
 
             // If you have a login icon button
@@ -1038,7 +1210,12 @@
             const menuBtn = document.getElementById('menu-btn');
             if (menuBtn) {
                 menuBtn.addEventListener('click', function () {
-                    window.location.href = 'menu-page.html';
+                    // Menu button could scroll to menu section or show food categories
+                    // For now, let's scroll to the food section
+                    const foodSection = document.querySelector('#food-section') || document.querySelector('.food-card');
+                    if (foodSection) {
+                        foodSection.scrollIntoView({ behavior: 'smooth' });
+                    }
                 });
             }
 
@@ -1084,8 +1261,35 @@
             }
         };
 
+        // Mock data for testing (uncomment to add sample items to cart)
+        function addMockCartData() {
+            const mockItems = [
+                {
+                    id: 1,
+                    name: "Butter Chicken",
+                    restaurant: "Spice Palace",
+                    price: 280,
+                    quantity: 2,
+                    image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100&h=100&fit=crop"
+                },
+                {
+                    id: 2,
+                    name: "Margherita Pizza",
+                    restaurant: "Pizza Corner",
+                    price: 320,
+                    quantity: 1,
+                    image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=100&h=100&fit=crop"
+                }
+            ];
+            localStorage.setItem('cartItems', JSON.stringify(mockItems));
+            updateCartDisplay();
+        }
+
         // Initialize the app
         renderFoodItems();
+
+        // Uncomment the line below to add mock cart data for testing:
+        // addMockCartData();
 
         // Add hover effect to restaurant cards
         document.querySelectorAll('.restaurant-card').forEach(card => {
@@ -1151,7 +1355,12 @@
 
         // Menu button event listener
         document.getElementById('menu-btn').addEventListener('click', function () {
-            window.location.href = 'menu-page.html';
+            // Menu button could scroll to menu section or show food categories
+            // For now, let's scroll to the food section
+            const foodSection = document.querySelector('#food-section') || document.querySelector('.food-card');
+            if (foodSection) {
+                foodSection.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     </script>
 </body>
