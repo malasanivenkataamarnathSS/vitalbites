@@ -692,7 +692,6 @@
                     otpSection.classList.add('animate__animated', 'animate__fadeIn');
                     startCountdown();
                     otpDigits[0].focus();
-                    showAlert('Verification code sent successfully to ' + email, 'success');
                 } else {
                     showError(emailInput, emailError, data.error || 'Failed to send OTP');
                 }
@@ -787,7 +786,6 @@
                         if (data.userId) localStorage.setItem('userId', data.userId);
                         if (data.username) localStorage.setItem('username', data.username);
 
-                        showAlert('Login successful! Redirecting...', 'success');
                         setTimeout(() => {
                             // Check for return URL first
                             const returnUrl = localStorage.getItem('returnUrl') || new URLSearchParams(window.location.search).get('returnUrl');
@@ -911,7 +909,6 @@
                     // Clean up temporary email
                     localStorage.removeItem('tempUserEmail');
 
-                    showAlert('Registration completed successfully! Redirecting...', 'success');
                     setTimeout(() => {
                         // Check for return URL first
                         const returnUrl = localStorage.getItem('returnUrl') || new URLSearchParams(window.location.search).get('returnUrl');
