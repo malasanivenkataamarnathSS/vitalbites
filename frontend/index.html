@@ -601,55 +601,8 @@
                             <i class="fas fa-user text-lg group-hover:scale-110 transition-transform"></i>
                         </button>
                     </div>
-
-                    <!-- User Menu (for logged in users) -->
-                    <div id="user-menu-container" class="hidden relative">
-                        <button id="user-menu-btn"
-                            class="relative p-3 text-gray-300 hover:text-white transition-all duration-300 bg-gray-800 hover:bg-gray-700 rounded-lg group">
-                            <i class="fas fa-user text-lg group-hover:scale-110 transition-transform"></i>
-                        </button>
-
-                        <!-- User Dropdown Menu -->
-                        <div id="user-dropdown"
-                            class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
-                            <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-red-50">
-                                <p class="font-semibold text-gray-800 text-lg" id="dropdown-user-name">User Name</p>
-                                <p class="text-sm text-gray-600" id="dropdown-user-email">user@example.com</p>
-                            </div>
-                            <div class="py-2">
-                                <a href="#"
-                                    class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:translate-x-1">
-                                    <i class="fas fa-user-circle mr-4 text-orange-500 text-xl w-6"></i>
-                                    My Profile
-                                </a>
-                                <a href="#"
-                                    class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:translate-x-1">
-                                    <i class="fas fa-receipt mr-4 text-blue-500 text-xl w-6"></i>
-                                    Order History
-                                </a>
-                                <a href="#"
-                                    class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:translate-x-1">
-                                    <i class="fas fa-heart mr-4 text-red-500 text-xl w-6"></i>
-                                    Favorites
-                                </a>
-                                <a href="#"
-                                    class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-50 transition-all duration-200 hover:translate-x-1">
-                                    <i class="fas fa-cog mr-4 text-gray-500 text-xl w-6"></i>
-                                    Settings
-                                </a>
-                            </div>
-                            <div class="border-t border-gray-100">
-                                <button id="logout-btn"
-                                    class="w-full flex items-center px-6 py-4 text-red-600 hover:bg-red-50 transition-all duration-200 font-medium">
-                                    <i class="fas fa-sign-out-alt mr-4 text-xl w-6"></i>
-                                    Sign Out
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </div>
     </header>
 
     <!-- Enhanced Welcome Banner -->
@@ -1349,15 +1302,13 @@
         // Update UI based on login status
         function updateUIForLoginStatus() {
             const profileIconContainer = document.getElementById('profile-icon-container');
-            const userMenuContainer = document.getElementById('user-menu-container');
             const notificationsContainer = document.getElementById('notifications-container');
             const userCta = document.getElementById('user-cta');
             const welcomeUserName = document.getElementById('welcome-user-name');
 
             if (isLoggedIn()) {
-                // Hide login button, show user menu and other logged-in elements
-                if (profileIconContainer) profileIconContainer.classList.add('hidden');
-                if (userMenuContainer) userMenuContainer.classList.remove('hidden');
+                // Keep profile icon visible and show other logged-in elements
+                if (profileIconContainer) profileIconContainer.classList.remove('hidden');
                 if (notificationsContainer) notificationsContainer.classList.remove('hidden');
 
                 // Update welcome banner
@@ -1368,13 +1319,9 @@
                 const email = localStorage.getItem('userEmail') || 'user@example.com';
 
                 const userName = document.getElementById('user-name');
-                const dropdownUserName = document.getElementById('dropdown-user-name');
-                const dropdownUserEmail = document.getElementById('dropdown-user-email');
                 const avatar = document.getElementById('user-avatar');
 
                 if (userName) userName.textContent = username;
-                if (dropdownUserName) dropdownUserName.textContent = username;
-                if (dropdownUserEmail) dropdownUserEmail.textContent = email;
                 if (welcomeUserName) welcomeUserName.textContent = `Welcome back, ${username}!`;
 
                 // Set user avatar to first letter of username
@@ -1384,9 +1331,8 @@
                 console.log('🔄 Reloading cart after login status update...');
                 forceReloadCart();
             } else {
-                // Show login button, hide user menu and other logged-in elements
+                // Show profile icon for login, hide other logged-in elements
                 if (profileIconContainer) profileIconContainer.classList.remove('hidden');
-                if (userMenuContainer) userMenuContainer.classList.add('hidden');
                 if (notificationsContainer) notificationsContainer.classList.add('hidden');
 
                 // Update welcome banner
@@ -1525,7 +1471,8 @@
                         localStorage.setItem('returnUrl', 'index.html');
                         window.location.href = 'login.html';
                     } else {
-                        window.location.href = 'index.html';
+                        // Redirect to profile page when logged in
+                        window.location.href = 'profile.html';
                     }
                 });
             }
@@ -1584,47 +1531,6 @@
                     if (foodSection) {
                         foodSection.scrollIntoView({ behavior: 'smooth' });
                     }
-                });
-            }
-
-            // User menu dropdown functionality
-            const userMenuBtn = document.getElementById('user-menu-btn');
-            const userDropdown = document.getElementById('user-dropdown');
-            const logoutBtn = document.getElementById('logout-btn');
-
-            if (userMenuBtn && userDropdown) {
-                userMenuBtn.addEventListener('click', function () {
-                    userDropdown.classList.toggle('hidden');
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function (event) {
-                    if (!userMenuBtn.contains(event.target) && !userDropdown.contains(event.target)) {
-                        userDropdown.classList.add('hidden');
-                    }
-                });
-            }
-
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function () {
-                    // Clear all user data
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userEmail');
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('userId');
-
-                    // Update UI
-                    updateUIForLoginStatus();
-
-                    // Hide dropdown
-                    userDropdown.classList.add('hidden');
-
-                    // Show success message
-                    alert('You have been logged out successfully!');
-
-                    // Optionally redirect to home or login page
-                    window.location.reload();
                 });
             }
         };
