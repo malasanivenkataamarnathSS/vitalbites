@@ -7,6 +7,7 @@
     <title>VitalBites - Checkout</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -167,6 +168,19 @@
             background-color: #22c55e;
             color: white;
         }
+
+        #map {
+            width: 100%;
+            height: 320px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2d2d36;
+        }
+
+        .leaflet-popup-content {
+            background: #23232a !important;
+            color: #f3f4f6 !important;
+        }
     </style>
 </head>
 
@@ -246,9 +260,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="cart-items-checkout" class="space-y-4">
-                        <!-- Cart items will be populated here -->
-                    </div>
+                    <div id="cart-items" class="mb-4"></div>
                 </section>
 
                 <!-- Delivery Address -->
@@ -257,6 +269,29 @@
                         <i class="fas fa-map-marker-alt text-orange-500 mr-3"></i>
                         Delivery Address
                     </h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Saved Addresses</label>
+                        <select id="saved-addresses"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2">
+                            <option value="">Select a saved address</option>
+                        </select>
+                        <button type="button" id="use-address-btn"
+                            class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all duration-300 font-medium">
+                            <i class="fas fa-check mr-2"></i>Use This Address
+                        </button>
+                        <button type="button" id="delete-address-btn"
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-300 font-medium ml-2">
+                            <i class="fas fa-trash mr-2"></i>Delete Selected Address
+                        </button>
+                    </div>
+                    <div class="mb-6">
+                        <button type="button" id="use-location-btn"
+                            class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all duration-300 font-medium mb-2">
+                            <i class="fas fa-location-arrow mr-2"></i>Use My Location
+                        </button>
+                        <div id="map"></div>
+                        <div id="location-message" class="text-sm text-orange-500 mb-2"></div>
+                    </div>
                     <form id="address-form" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -301,6 +336,17 @@
                                     placeholder="Pincode" maxlength="6" pattern="[0-9]{6}" required>
                             </div>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Instructions</label>
+                            <textarea id="deliveryInstructions" rows="2"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                                placeholder="E.g. Leave at the door, call on arrival"></textarea>
+                        </div>
+                        <button type="button" id="save-address-btn"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 font-medium mt-2">
+                            <i class="fas fa-save mr-2"></i>Save Address
+                        </button>
                     </form>
                 </section>
 
@@ -427,6 +473,9 @@
         </div>
     </footer>
 
+    <!-- Add this in <head> (replace YOUR_GOOGLE_MAPS_API_KEY with your actual key) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         // Check authentication on page load
         function checkAuth() {
@@ -442,16 +491,13 @@
 
         // Load cart from localStorage (using consistent key with index.html)
         function loadCart() {
-            const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
-            return cart;
+            return JSON.parse(localStorage.getItem('cartItems') || '[]');
         }
 
         // Display cart items in checkout
         function displayCartItems() {
             const cart = loadCart();
-            console.log('Checkout page - loaded cart items:', cart);
-            console.log('Cart length:', cart.length);
-            const cartContainer = document.getElementById('cart-items-checkout');
+            const cartContainer = document.getElementById('cart-items');
             const cartCountDisplay = document.getElementById('cart-count-display');
 
             // Update cart count display
@@ -650,35 +696,37 @@
             const state = document.getElementById('state').value;
             const pincode = document.getElementById('pincode').value;
             const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const deliveryInstructions = document.getElementById('deliveryInstructions').value;
 
             if (!fullName || !mobile || !street || !city || !state || !pincode) {
-                alert('Please fill all address fields');
+                showAlert('Please fill all address fields', 'error');
                 return;
             }
-
             if (mobile.length !== 10) {
-                alert('Please enter a valid 10-digit mobile number');
+                showAlert('Please enter a valid 10-digit mobile number', 'error');
                 return;
             }
-
             if (pincode.length !== 6) {
-                alert('Please enter a valid 6-digit pincode');
+                showAlert('Please enter a valid 6-digit pincode', 'error');
                 return;
             }
-
             const cart = loadCart();
             if (cart.length === 0) {
-                alert('Your cart is empty');
+                showAlert('Your cart is empty', 'error');
                 return;
             }
 
-            // Simulate order placement
-            alert(`Order placed successfully!\n\nDelivery Address: ${fullName}, ${street}, ${city}, ${state} - ${pincode}\nPayment Method: ${paymentMethod.toUpperCase()}\n\nYour order will be delivered in 25-35 minutes.`);
+            // Save order details if needed (optional)
+            localStorage.setItem('lastOrder', JSON.stringify({
+                fullName, mobile, street, city, state, pincode, paymentMethod, deliveryInstructions, cart
+            }));
 
-            // Clear cart and redirect to a success page or home
-            localStorage.removeItem('cartItems'); // Using consistent key
-            alert('🎉 Order placed successfully! You will receive a confirmation shortly.');
-            window.location.href = 'index.html';
+            // Clear cart and redirect to confirmation page
+            localStorage.removeItem('cartItems');
+            showAlert('🎉 Order placed successfully! You will receive a confirmation shortly.', 'success');
+            setTimeout(() => {
+                window.location.href = 'order-success.html';
+            }, 1200);
         });
 
         // Check if user is logged in
@@ -686,16 +734,167 @@
             return !!localStorage.getItem('token');
         }
 
+        let map, marker;
+
+        function initOpenStreetMap() {
+            const defaultLatLng = [17.385044, 78.486671]; // Hyderabad [lat, lng]
+            map = L.map('map').setView(defaultLatLng, 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker(defaultLatLng, { draggable: true }).addTo(map);
+
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                reverseGeocodeOSM(e.latlng);
+            });
+
+            marker.on('dragend', function() {
+                reverseGeocodeOSM(marker.getLatLng());
+            });
+
+            document.getElementById('map').style.display = 'block';
+        }
+
+        function reverseGeocodeOSM(latlng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("location-message").textContent = "Location selected!";
+                    fillAddressFieldsOSM(data.address, data.display_name);
+                })
+                .catch(() => {
+                    document.getElementById("location-message").textContent = "Could not get address for this location.";
+                });
+        }
+
+        function fillAddressFieldsOSM(address, displayName) {
+            document.getElementById("street").value = displayName || '';
+            document.getElementById("city").value = address.city || address.town || address.village || '';
+            document.getElementById("state").value = address.state || '';
+            document.getElementById("pincode").value = address.postcode || '';
+        }
+
+        document.getElementById("use-location-btn").addEventListener("click", function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    marker.setLatLng(latlng);
+                    map.setView(latlng, 16);
+                    reverseGeocodeOSM(latlng);
+                    document.getElementById("location-message").textContent = "Using your current location!";
+                }, function () {
+                    document.getElementById("location-message").textContent = "Unable to get your location.";
+                });
+            } else {
+                document.getElementById("location-message").textContent = "Geolocation is not supported.";
+            }
+        });
+
+        function loadSavedAddresses() {
+            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+            const select = document.getElementById('saved-addresses');
+            select.innerHTML = '<option value="">Select a saved address</option>';
+            addresses.forEach((addr, i) => {
+                select.innerHTML += `<option value="${i}">${addr.fullName}, ${addr.street}, ${addr.city}, ${addr.state} - ${addr.pincode}</option>`;
+            });
+        }
+
+        document.getElementById('saved-addresses').addEventListener('change', function () {
+            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+            const idx = this.value;
+            if (idx !== "") {
+                const addr = addresses[idx];
+                document.getElementById('fullName').value = addr.fullName;
+                document.getElementById('mobile').value = addr.mobile;
+                document.getElementById('street').value = addr.street;
+                document.getElementById('city').value = addr.city;
+                document.getElementById('state').value = addr.state;
+                document.getElementById('pincode').value = addr.pincode;
+            }
+        });
+
+        document.getElementById('save-address-btn').addEventListener('click', function () {
+            const addr = {
+                fullName: document.getElementById('fullName').value,
+                mobile: document.getElementById('mobile').value,
+                street: document.getElementById('street').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                pincode: document.getElementById('pincode').value
+            };
+            if (!addr.fullName || !addr.mobile || !addr.street || !addr.city || !addr.state || !addr.pincode) {
+                showAlert('Fill all address fields before saving!', 'warning');
+                return;
+            }
+            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+            addresses.push(addr);
+            localStorage.setItem('savedAddresses', JSON.stringify(addresses));
+            loadSavedAddresses();
+            showAlert('Address saved!', 'success');
+        });
+
+        // Use This Address button: fills form with selected saved address
+        document.getElementById('use-address-btn').addEventListener('click', function () {
+            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+            const idx = document.getElementById('saved-addresses').value;
+            if (idx !== "") {
+                const addr = addresses[idx];
+                document.getElementById('fullName').value = addr.fullName;
+                document.getElementById('mobile').value = addr.mobile;
+                document.getElementById('street').value = addr.street;
+                document.getElementById('city').value = addr.city;
+                document.getElementById('state').value = addr.state;
+                document.getElementById('pincode').value = addr.pincode;
+                showAlert('Address loaded!', 'success');
+            }
+        });
+
+        // Show Save Address button only when address fields are filled
+        function toggleSaveAddressBtn() {
+            const fullName = document.getElementById('fullName').value;
+            const mobile = document.getElementById('mobile').value;
+            const street = document.getElementById('street').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const pincode = document.getElementById('pincode').value;
+            const btn = document.getElementById('save-address-btn');
+            if (fullName && mobile && street && city && state && pincode) {
+                btn.style.display = 'block';
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+        ['fullName', 'mobile', 'street', 'city', 'state', 'pincode'].forEach(id => {
+            document.getElementById(id).addEventListener('input', toggleSaveAddressBtn);
+        });
+        toggleSaveAddressBtn();
+
         // Initialize page
         window.onload = function () {
-            // Check authentication first
-            if (!checkAuth()) {
-                return; // Exit if not authenticated
-            }
-
-            // Load and display cart items
+            if (!checkAuth()) return;
             displayCartItems();
+            initOpenStreetMap();
+            loadSavedAddresses();
         };
+
+        document.getElementById('delete-address-btn').addEventListener('click', function () {
+            const select = document.getElementById('saved-addresses');
+            const idx = select.value;
+            if (idx === "") {
+                showAlert('Please select an address to delete.', 'warning');
+                return;
+            }
+            let addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+            addresses.splice(idx, 1);
+            localStorage.setItem('savedAddresses', JSON.stringify(addresses));
+            loadSavedAddresses();
+            select.value = "";
+            showAlert('Address deleted!', 'success');
+        });
     </script>
 </body>
 

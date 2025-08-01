@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Placed Successfully! | VitalBites</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #18181b !important; color: #f3f4f6 !important; }
+        .bg-white { background: #23232a !important; }
+        .text-orange-500 { color: #ff8800 !important; }
+        .btn-primary {
+            background: linear-gradient(90deg, #ff8800 0%, #ff4d4f 100%);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #ff8800 0%, #ff4d4f 100%);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center">
+    <main class="w-full max-w-md mx-auto mt-16 bg-white rounded-xl shadow-xl p-8 text-center">
+        <div class="mb-6">
+            <i class="fas fa-check-circle text-6xl text-orange-500 drop-shadow-lg"></i>
+        </div>
+        <h1 class="text-3xl font-bold mb-2">Order Placed Successfully!</h1>
+        <p class="text-lg text-gray-400 mb-6">Thank you for ordering with <span class="font-semibold text-orange-500">VitalBites</span>.<br>
+        Your delicious food is being prepared and will be delivered soon.</p>
+        <div class="bg-gray-900 rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-2 text-orange-500">Order Summary</h2>
+            <div id="order-summary" class="text-left text-sm"></div>
+            <div class="mt-4 text-center text-orange-500 font-medium">
+                <i class="fas fa-clock mr-2"></i>
+                Estimated delivery: <span>25-35 minutes</span>
+            </div>
+        </div>
+        <button onclick="window.location.href='index.html'" class="btn-primary px-6 py-3 rounded-lg font-semibold text-lg shadow-lg transition-all duration-300 hover:scale-105">
+            <i class="fas fa-home mr-2"></i>Back to Menu
+        </button>
+    </main>
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+        &copy; 2025 VitalBites. All rights reserved.
+    </footer>
+    <script>
+        // Show last order summary if available
+        const order = JSON.parse(localStorage.getItem('lastOrder') || '{}');
+        const summaryDiv = document.getElementById('order-summary');
+        if (order && order.cart && order.cart.length) {
+            summaryDiv.innerHTML = `
+                <div class="mb-2"><span class="font-semibold">Name:</span> ${order.fullName}</div>
+                <div class="mb-2"><span class="font-semibold">Mobile:</span> ${order.mobile}</div>
+                <div class="mb-2"><span class="font-semibold">Address:</span> ${order.street}, ${order.city}, ${order.state} - ${order.pincode}</div>
+                <div class="mb-2"><span class="font-semibold">Payment:</span> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod === 'upi' ? 'UPI' : 'Card'}</div>
+                <div class="mb-2"><span class="font-semibold">Items:</span></div>
+                <ul class="list-disc ml-6 mb-2">
+                    ${order.cart.map(item => `<li>${item.quantity} × ${item.name} <span class="text-orange-500">₹${(item.price * item.quantity).toFixed(2)}</span></li>`).join('')}
+                </ul>
+                <div class="font-bold text-lg mt-2">Total: ₹${order.cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 40 + (order.cart.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.05)}</div>
+            `;
+        } else {
+            summaryDiv.innerHTML = `<div class="text-gray-400">Order details not found.</div>`;
+        }
+    </script>
+</body>
+</html>
