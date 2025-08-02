@@ -113,15 +113,20 @@
             margin-bottom: 20px;
         }
 
-        .profile-pic-wrap {
+        .profile-icon-wrap {
             position: relative;
         }
 
-        .profile-pic {
+        .profile-icon {
             width: 80px;
             height: 80px;
             border-radius: 50%;
             border: 3px solid #ff8800;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff8800;
         }
 
         .verified-badge {
@@ -475,16 +480,18 @@
             <div class="card">
                 <div class="card-title"><i class="fas fa-user"></i> Personal Information</div>
                 <div class="profile-info">
-                    <div class="profile-pic-wrap">
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="profile-pic" />
+                    <div class="profile-icon-wrap">
+                        <div class="profile-icon">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
                         <div class="verified-badge"><i class="fas fa-check"></i></div>
                     </div>
                     <div class="profile-details">
-                        <span class="name" id="profile-name">Alex Johnson</span>
-                        <span class="email" id="profile-email">alex.johnson@vitalbites.com</span>
+                        <span class="name" id="profile-name">Loading...</span>
+                        <span class="email" id="profile-email">Loading...</span>
                         <div class="badges">
                             <span class="badge">Active Member</span>
-                            <span class="badge orange">Since 2023</span>
+                            <span class="badge orange" id="member-since-badge">Since 2023</span>
                         </div>
                     </div>
                 </div>
@@ -492,34 +499,33 @@
                     <div class="input-row">
                         <div class="input-group">
                             <label for="fullname">Full Name</label>
-                            <input type="text" id="fullname" value="Alex Johnson" required />
+                            <input type="text" id="fullname" value="" required />
                         </div>
                         <div class="input-group">
                             <label for="email">Email</label>
-                            <input type="email" id="email" value="alex.johnson@vitalbites.com" required />
+                            <input type="email" id="email" value="" readonly class="bg-gray-800 cursor-not-allowed" />
                         </div>
                     </div>
                     <div class="input-row">
                         <div class="input-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" value="+91 9876543210" required />
+                            <input type="tel" id="phone" value="" readonly class="bg-gray-800 cursor-not-allowed" />
+                            <p class="text-xs text-gray-400 mt-1">Contact support to update your mobile number</p>
                         </div>
-                        <div class="input-group">
-                            <label for="dob">Date of Birth</label>
-                            <input type="date" id="dob" value="1990-05-15" />
-                        </div>
-                    </div>
-                    <div class="input-row">
                         <div class="input-group">
                             <label for="gender">Gender</label>
-                            <select id="gender">
+                            <select id="gender" class="bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white">
+                                <option value="" selected>Select Gender</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="input-row">
                         <div class="input-group">
-                            <!-- Empty for layout -->
+                            <label for="dob">Date of Birth</label>
+                            <input type="date" id="dob" class="bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white" />
                         </div>
                     </div>
                     <button type="submit" class="save-btn">
@@ -694,15 +700,122 @@
             });
         });
 
-        // Load user profile
-        function loadUserProfile() {
-            document.getElementById('profile-name').textContent = userProfile.name;
-            document.getElementById('profile-email').textContent = userProfile.email;
-            document.getElementById('fullname').value = userProfile.name;
-            document.getElementById('email').value = userProfile.email;
-            document.getElementById('phone').value = userProfile.phone;
-            document.getElementById('dob').value = userProfile.dob;
-            document.getElementById('gender').value = userProfile.gender;
+        // Load user profile from server
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    showNotification('You are not logged in. Redirecting to login page...', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'login.html?returnUrl=profile.html';
+                    }, 2000);
+                    return;
+                }
+                
+                // Fetch user profile from API
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API error: ${response.status} ${errorText}`);
+                }
+                
+                const responseText = await response.text();
+                
+                // Try to parse the response as JSON
+                let userData;
+                try {
+                    userData = JSON.parse(responseText);
+                    console.log("User data:", userData);
+                } catch (e) {
+                    console.error("JSON parse error:", e);
+                    throw new Error("Invalid JSON response from server");
+                }
+                
+                // Update the UI with fetched data
+                document.getElementById('profile-name').textContent = userData.name || 'User';
+                document.getElementById('profile-email').textContent = userData.email || 'No email provided';
+
+                // Update form fields
+                const fullnameInput = document.getElementById('fullname');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+                const genderSelect = document.getElementById('gender');
+                const dobInput = document.getElementById('dob');
+
+                if (fullnameInput) fullnameInput.value = userData.name || '';
+                if (emailInput) emailInput.value = userData.email || '';
+                
+                // Display mobile number without +91 prefix
+                if (phoneInput) phoneInput.value = userData.mobile || '';
+                
+                // Set gender if available
+                if (genderSelect && userData.gender) {
+                    genderSelect.value = userData.gender;
+                }
+                
+                // Set date of birth if available
+                if (dobInput && userData.dateOfBirth) {
+                    const date = new Date(userData.dateOfBirth);
+                    if (!isNaN(date.getTime())) {
+                        dobInput.valueAsDate = date;
+                    }
+                }
+
+                showNotification('Profile loaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showNotification('Failed to load profile data: ' + error.message, 'error');
+                fallbackToLocalStorage();
+            }
+        }
+
+        // Add this helper function for fallback
+        function fallbackToLocalStorage() {
+            console.log("Falling back to localStorage data");
+            const username = localStorage.getItem('username');
+            const userEmail = localStorage.getItem('userEmail');
+            const userMobile = localStorage.getItem('userMobile');
+            
+            // Log all localStorage values for debugging
+            console.log("localStorage values:", {
+                username,
+                userEmail,
+                userMobile
+            });
+            
+            if (username) {
+                document.getElementById('profile-name').textContent = username;
+                const fullnameInput = document.getElementById('fullname');
+                if (fullnameInput) fullnameInput.value = username;
+            }
+            
+            if (userEmail) {
+                document.getElementById('profile-email').textContent = userEmail;
+                const emailInput = document.getElementById('email');
+                if (emailInput) emailInput.value = userEmail;
+            }
+            
+            if (userMobile) {
+                const phoneInput = document.getElementById('phone');
+                if (phoneInput) phoneInput.value = userMobile;
+            }
+        }
+
+        // Make sure to call this function when the page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUserProfile();
+        });
+
+        // Helper function to show notifications (if not already defined)
+        function showNotification(message, type = 'info') {
+            // Use your existing notification system or implement a simple one
+            alert(message);
         }
 
         // Update stats
@@ -719,7 +832,7 @@
         }
 
         // Profile form submission
-        document.getElementById('profile-form').addEventListener('submit', function (e) {
+        document.getElementById('profile-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const submitBtn = this.querySelector('.save-btn');
@@ -727,24 +840,58 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
             submitBtn.disabled = true;
 
-            setTimeout(() => {
-                userProfile.name = document.getElementById('fullname').value;
-                userProfile.email = document.getElementById('email').value;
-                userProfile.phone = document.getElementById('phone').value;
-                userProfile.dob = document.getElementById('dob').value;
-                userProfile.gender = document.getElementById('gender').value;
+            try {
+                const token = localStorage.getItem('token');
+                const userEmail = localStorage.getItem('userEmail');
 
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                loadUserProfile();
+                if (!token || !userEmail) {
+                    throw new Error('You are not logged in');
+                }
+
+                // Get values from form
+                const username = document.getElementById('fullname').value;
+                const gender = document.getElementById('gender').value;
+                let dateOfBirth = document.getElementById('dob').value;
+                
+                // Only send dateOfBirth if a date was selected
+                if (!dateOfBirth) {
+                    dateOfBirth = null;
+                }
+
+                // Call API to update user profile
+                const response = await fetch(`/api/user/update-profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        username,
+                        gender: gender || null,
+                        dateOfBirth
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update profile');
+                }
+
+                // Reload the profile data
+                await loadUserProfile();
 
                 submitBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
                 showNotification('Profile updated successfully!', 'success');
 
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showNotification('Failed to update profile: ' + error.message, 'error');
+                submitBtn.innerHTML = originalText;
+            } finally {
                 setTimeout(() => {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }, 2000);
-            }, 1000);
+            }
         });
 
         // Render orders
