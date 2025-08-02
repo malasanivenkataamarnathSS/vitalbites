@@ -7,6 +7,8 @@ const UserSchema = new mongoose.Schema({
   otp: String,
   otpExpires: Date,
   lastOtpSent: Date,
+  gender: { type: String, enum: ["male", "female", "other", null], default: null },
+  dateOfBirth: { type: Date, default: null },
   role: { type: String, enum: ["user", "admin"], default: "user" },
   // Multiple addresses support
   addresses: [{

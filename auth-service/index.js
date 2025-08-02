@@ -398,5 +398,87 @@ app.put('/api/auth/addresses/:addressId/default', authenticateToken, async (req,
   }
 });
 
+// Update user profile
+app.put('/api/user/update-profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
+    }
+    
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Get updated data
+    const { username, gender, dateOfBirth } = req.body;
+    
+    // Find and update user
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Update fields - only name, gender and dateOfBirth can be changed
+    user.username = username;
+    
+    // Only set gender if provided
+    if (gender !== undefined) {
+      user.gender = gender;
+    }
+    
+    // Only set dateOfBirth if provided
+    if (dateOfBirth !== undefined) {
+      user.dateOfBirth = dateOfBirth;
+    }
+    
+    await user.save();
+    
+    res.json({ success: true, message: "Profile updated successfully" });
+    
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get user profile
+app.get('/api/user/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
+    }
+    
+    // Verify token and find user (existing code)...
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Format mobile number without +91 prefix
+    const mobileDisplay = user.mobile ? user.mobile.replace('+91', '') : null;
+    
+    // Format user data for frontend
+    const userData = {
+      name: user.username || null,
+      email: user.email || null,
+      mobile: mobileDisplay,  // Mobile without +91 prefix
+      gender: user.gender || null,
+      dateOfBirth: user.dateOfBirth || null,
+      createdAt: user.createdAt || new Date()
+    };
+    
+    console.log(`Sending profile data for user ${user.email}:`, userData);
+    res.json(userData);
+    
+  } catch (error) {
+    console.error('Error in profile endpoint:', error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.listen(5000, () => console.log('Auth Service on 5000'));
 
