@@ -1,0 +1,46 @@
+FROM node:18-alpine
+
+# Install PM2 globally
+RUN npm install -g pm2
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Create PM2 ecosystem file
+RUN echo 'module.exports = { \
+  apps: [{ \
+    name: "notification-service", \
+    script: "index.js", \
+    instances: "max", \
+    exec_mode: "cluster", \
+    autorestart: true, \
+    watch: false, \
+    max_memory_restart: "1G", \
+    env: { \
+      NODE_ENV: "production" \
+    } \
+  }] \
+}' > ecosystem.config.js
+
+# Expose port
+EXPOSE 5005
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5005/health', (res) => { \
+    process.exit(res.statusCode === 200 ? 0 : 1); \
+  }).on('error', () => process.exit(1));"
+
+# Start with PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]

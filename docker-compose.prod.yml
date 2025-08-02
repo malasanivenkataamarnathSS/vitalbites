@@ -2,13 +2,13 @@ services:
   mongodb:
     image: mongo:6
     restart: always
-    ports:
-      - 27017:27017
-    volumes:
-      - mongo-data:/data/db
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+    volumes:
+      - mongo-data:/data/db
+      - ./database/mongodb/init:/docker-entrypoint-initdb.d
+    command: mongod --auth
     networks:
       - vitalbites-network
     healthcheck:
@@ -21,8 +21,6 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - 6379:6379
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
@@ -40,9 +38,12 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./frontend:/var/www/html:ro
-      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api-gateway
     networks:
@@ -54,25 +55,19 @@ services:
       retries: 3
 
   api-gateway:
-    build: ./api-gateway
-    ports:
-      - "8080:8080"
+    build: 
+      context: ./api-gateway
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=100
     depends_on:
       redis:
         condition: service_healthy
-      auth-service:
-        condition: service_started
-      menu-service:
-        condition: service_started
-      order-service:
-        condition: service_started
-      user-service:
-        condition: service_started
-      cart-service:
-        condition: service_started
     networks:
       - vitalbites-network
     healthcheck:
@@ -83,14 +78,20 @@ services:
       start_period: 30s
 
   auth-service:
-    build: ./auth-service
+    build: 
+      context: ./auth-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/authdb
-      - JWT_SECRET=supersecret
-      - SMTP_EMAIL=mvamarnath63@gmail.com
-      - SMTP_PASS=almq llwf jtxm jwde
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/authdb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - SMTP_EMAIL=${SMTP_EMAIL}
+      - SMTP_PASS=${SMTP_PASS}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=50
     depends_on:
       mongodb:
         condition: service_healthy
@@ -106,12 +107,17 @@ services:
       start_period: 30s
 
   menu-service:
-    build: ./menu-service
+    build: 
+      context: ./menu-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/menudb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/menudb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=100
     depends_on:
       mongodb:
         condition: service_healthy
@@ -127,12 +133,19 @@ services:
       start_period: 30s
 
   order-service:
-    build: ./order-service
+    build: 
+      context: ./order-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/orderdb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/orderdb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_SECRET=${RAZORPAY_SECRET}
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=50
     depends_on:
       mongodb:
         condition: service_healthy
@@ -148,12 +161,17 @@ services:
       start_period: 30s
 
   cart-service:
-    build: ./cart-service
+    build: 
+      context: ./cart-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/cartdb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/cartdb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=100
     depends_on:
       mongodb:
         condition: service_healthy
@@ -169,12 +187,17 @@ services:
       start_period: 30s
 
   user-service:
-    build: ./user-service
+    build: 
+      context: ./user-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/userdb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/userdb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=100
     depends_on:
       mongodb:
         condition: service_healthy
@@ -190,12 +213,15 @@ services:
       start_period: 30s
 
   notification-service:
-    build: ./notification-service
+    build: 
+      context: ./notification-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/notificationdb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/notificationdb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
       - SOCKET_IO_PORT=5005
     depends_on:
       mongodb:
@@ -212,12 +238,17 @@ services:
       start_period: 30s
 
   admin-service:
-    build: ./admin-service
+    build: 
+      context: ./admin-service
+      dockerfile: Dockerfile.prod
+    restart: always
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/admindb
-      - JWT_SECRET=supersecret
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/admindb?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=redis://redis:6379
-      - NODE_ENV=development
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=30
     depends_on:
       mongodb:
         condition: service_healthy
