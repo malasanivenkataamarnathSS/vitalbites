@@ -12,5 +12,6 @@ app.use('/api/menu', createProxyMiddleware({ target: 'http://menu-service:5001',
 app.use('/api/orders', createProxyMiddleware({ target: 'http://order-service:5002', changeOrigin: true, pathRewrite: { '^/api/orders': '/api/orders' } }));
 app.use('/api/user', createProxyMiddleware({ target: 'http://user-service:5003', changeOrigin: true, pathRewrite: { '^/api/user': '/api/user' } }));
 app.use('/api/cart', createProxyMiddleware({ target: 'http://cart-service:5004', changeOrigin: true, pathRewrite: { '^/api/cart': '/api/cart' } }));
+app.use('/api/admin', createProxyMiddleware({ target: 'http://admin-service:3007', changeOrigin: true, pathRewrite: { '^/api/admin': '/api/admin' } }));
 
 app.listen(8080, () => console.log('API Gateway listening on 8080'));

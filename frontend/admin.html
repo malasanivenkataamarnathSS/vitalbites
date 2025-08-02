@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VitalBites Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="admin-enhancements.css" />
     <style>
         :root {
             --sidebar-width: 240px;
@@ -581,7 +582,39 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="plansTable"></tbody>
+                            <tbody id="plansTable">
+                                <tr>
+                                    <td>Monthly</td>
+                                    <td>₹299</td>
+                                    <td>
+                                        <ul style="margin:0;padding-left:1.2em;">
+                                            <li>Free Delivery</li>
+                                            <li>Priority Support</li>
+                                            <li>Exclusive Offers</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn" aria-label="Edit Plan" onclick="alert('Edit plan: Monthly')"><i class="fas fa-edit"></i></button>
+                                        <button class="action-btn" aria-label="Delete Plan" onclick="alert('Delete plan: Monthly')"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Annual</td>
+                                    <td>₹2999</td>
+                                    <td>
+                                        <ul style="margin:0;padding-left:1.2em;">
+                                            <li>Free Delivery</li>
+                                            <li>Priority Support</li>
+                                            <li>Exclusive Offers</li>
+                                            <li>2 Months Free</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn" aria-label="Edit Plan" onclick="alert('Edit plan: Annual')"><i class="fas fa-edit"></i></button>
+                                        <button class="action-btn" aria-label="Delete Plan" onclick="alert('Delete plan: Annual')"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -666,35 +699,8 @@
             </section>
         </main>
     </div>
+    <script src="js/admin-api.js"></script>
     <script>
-        // Mock Data
-        const adminName = "Amit Kumar";
-        const users = [
-            { id: 1, name: "Amit Kumar", email: "amit.kumar@email.com", role: "Admin", status: "active" },
-            { id: 2, name: "Priya Singh", email: "priya.singh@email.com", role: "User", status: "active" },
-            { id: 3, name: "Rahul Sharma", email: "rahul.sharma@email.com", role: "User", status: "inactive" },
-            { id: 4, name: "Sneha Patel", email: "sneha.patel@email.com", role: "User", status: "active" }
-        ];
-        const orders = [
-            { id: 101, user: "Amit Kumar", status: "Delivered", total: 499, date: "2025-07-28" },
-            { id: 102, user: "Priya Singh", status: "Processing", total: 299, date: "2025-07-29" },
-            { id: 103, user: "Rahul Sharma", status: "Cancelled", total: 199, date: "2025-07-27" },
-            { id: 104, user: "Sneha Patel", status: "Delivered", total: 399, date: "2025-07-26" }
-        ];
-        const addresses = [
-            { id: 1, user: "Amit Kumar", label: "Home", address: "Flat 101, Green Residency, Mumbai" },
-            { id: 2, user: "Priya Singh", label: "Work", address: "2nd Floor, Tech Park, Pune" }
-        ];
-        const plans = [
-            { id: 1, name: "Monthly", price: "₹299", benefits: ["Free Delivery", "Priority Support", "Exclusive Offers"] },
-            { id: 2, name: "Annual", price: "₹2999", benefits: ["Free Delivery", "Priority Support", "Exclusive Offers", "2 Months Free"] }
-        ];
-        const menuItems = [
-            { id: 1, name: "Paneer Tikka", description: "Grilled cottage cheese cubes marinated in spices.", price: 249, available: true, photo: "" },
-            { id: 2, name: "Butter Naan", description: "Soft Indian bread with butter.", price: 49, available: true, photo: "" },
-            { id: 3, name: "Masala Dosa", description: "Crispy rice crepe stuffed with spicy potato.", price: 129, available: false, photo: "" }
-        ];
-
         // Sidebar toggle for mobile
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
@@ -716,17 +722,20 @@
             plans: document.getElementById('plansTab'),
             menu: document.getElementById('menuTab')
         };
+        
         tabButtons.forEach(btn => {
             btn.addEventListener('click', function () {
                 tabButtons.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 Object.values(tabSections).forEach(sec => sec.style.display = 'none');
                 if (this.dataset.tab === "logout") {
-                    alert("Logged out!");
+                    adminLogout();
                     return;
                 }
-                tabSections[this.dataset.tab].style.display = '';
-                tabSections[this.dataset.tab].focus();
+                if (tabSections[this.dataset.tab]) {
+                    tabSections[this.dataset.tab].style.display = '';
+                    tabSections[this.dataset.tab].focus();
+                }
             });
             btn.addEventListener('keydown', function (e) {
                 if (e.key === "Enter" || e.key === " ") this.click();
@@ -761,131 +770,6 @@
             }
         });
 
-        // Render admin name
-        document.getElementById('adminName').textContent = adminName;
-        document.getElementById('adminWelcomeName').textContent = adminName;
-
-        // Dashboard analytics
-        function renderDashboardCards() {
-            document.getElementById('userCount').textContent = users.length;
-            document.getElementById('activeUserCount').textContent = users.filter(u => u.status === "active").length;
-            document.getElementById('orderCount').textContent = orders.length;
-            document.getElementById('deliveredOrderCount').textContent = orders.filter(o => o.status === "Delivered").length;
-        }
-        renderDashboardCards();
-
-        // Dashboard recent orders
-        function renderDashboardOrders() {
-            const tbody = document.getElementById('dashboardOrdersTable');
-            tbody.innerHTML = orders.slice(0, 5).map(order => `
-        <tr>
-          <td>#${order.id}</td>
-          <td>${order.user}</td>
-          <td><span class="status ${order.status.toLowerCase()}">${order.status}</span></td>
-          <td>₹${order.total}</td>
-          <td>${order.date}</td>
-        </tr>
-      `).join('');
-        }
-        renderDashboardOrders();
-
-        // Users Table
-        function renderUsersTable() {
-            const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = users.map(user => `
-        <tr>
-          <td>${user.name}</td>
-          <td>${user.email}</td>
-          <td>${user.role}</td>
-          <td><span class="status ${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
-          <td>
-            <button class="action-btn" aria-label="Edit User" onclick="alert('Edit user: ${user.name}')"><i class="fas fa-edit"></i></button>
-            <button class="action-btn" aria-label="Delete User" onclick="alert('Delete user: ${user.name}')"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-        }
-        renderUsersTable();
-
-        // Orders Table
-        function renderOrdersTable() {
-            const tbody = document.getElementById('ordersTable');
-            tbody.innerHTML = orders.map(order => `
-        <tr>
-          <td>#${order.id}</td>
-          <td>${order.user}</td>
-          <td><span class="status ${order.status.toLowerCase()}">${order.status}</span></td>
-          <td>₹${order.total}</td>
-          <td>${order.date}</td>
-          <td>
-            <button class="action-btn" aria-label="Edit Order" onclick="alert('Edit order: #${order.id}')"><i class="fas fa-edit"></i></button>
-            <button class="action-btn" aria-label="Delete Order" onclick="alert('Delete order: #${order.id}')"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-        }
-        renderOrdersTable();
-
-        // Addresses Table
-        function renderAddressesTable() {
-            const tbody = document.getElementById('addressesTable');
-            tbody.innerHTML = addresses.map(addr => `
-        <tr>
-          <td>${addr.user}</td>
-          <td>${addr.label}</td>
-          <td>${addr.address}</td>
-          <td>
-            <button class="action-btn" aria-label="Edit Address" onclick="alert('Edit address for: ${addr.user}')"><i class="fas fa-edit"></i></button>
-            <button class="action-btn" aria-label="Delete Address" onclick="alert('Delete address for: ${addr.user}')"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-        }
-        renderAddressesTable();
-
-        // Plans Table
-        function renderPlansTable() {
-            const tbody = document.getElementById('plansTable');
-            tbody.innerHTML = plans.map(plan => `
-        <tr>
-          <td>${plan.name}</td>
-          <td>${plan.price}</td>
-          <td>
-            <ul style="margin:0;padding-left:1.2em;">
-              ${plan.benefits.map(b => `<li>${b}</li>`).join('')}
-            </ul>
-          </td>
-          <td>
-            <button class="action-btn" aria-label="Edit Plan" onclick="alert('Edit plan: ${plan.name}')"><i class="fas fa-edit"></i></button>
-            <button class="action-btn" aria-label="Delete Plan" onclick="alert('Delete plan: ${plan.name}')"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-        }
-        renderPlansTable();
-
-        // Render Menu Items Table
-        function renderMenuTable() {
-            const tbody = document.getElementById('menuTable');
-            tbody.innerHTML = menuItems.map(item => `
-            <tr>
-                <td>
-                    ${item.photo ? `<img src="${item.photo}" alt="${item.name}" style="width:40px;height:40px;object-fit:cover;border-radius:0.5rem;border:1px solid #2d2d36;" />` : `<span style="display:inline-block;width:40px;height:40px;border-radius:0.5rem;background:#18181b;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#a1a1aa;font-size:1.2rem;"></i></span>`}
-                </td>
-                <td>${item.name}</td>
-                <td style="max-width:220px;white-space:pre-line;overflow:hidden;text-overflow:ellipsis;">${item.description || ""}</td>
-                <td>₹${item.price}</td>
-                <td>
-                    <span class="status ${item.available ? 'active' : 'inactive'}">${item.available ? 'Yes' : 'No'}</span>
-                </td>
-                <td>
-                    <button class="action-btn" aria-label="Edit Menu Item" onclick="editMenuItem(${item.id})"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn" aria-label="Delete Menu Item" onclick="deleteMenuItem(${item.id})"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-        }
-
         // Show/Hide Menu Modal
         const menuModal = document.getElementById('menuModal');
         const menuForm = document.getElementById('menuForm');
@@ -894,7 +778,6 @@
         const menuPhotoInput = document.getElementById('menuPhoto');
         const menuPhotoPreview = document.getElementById('menuPhotoPreview');
         const menuPhotoName = document.getElementById('menuPhotoName');
-        let editingMenuId = null;
 
         addMenuBtn.onclick = function () {
             editingMenuId = null;
@@ -905,6 +788,7 @@
             document.getElementById('menuModalTitle').textContent = "Add Menu Item";
             menuModal.style.display = "flex";
         };
+        
         closeMenuModal.onclick = function () {
             menuModal.style.display = "none";
         };
@@ -934,66 +818,21 @@
             const description = document.getElementById('menuDescription').value.trim();
             const price = parseInt(document.getElementById('menuPrice').value, 10);
             const available = document.getElementById('menuAvailable').value === "true";
-            let photo = menuPhotoPreview.src && menuPhotoPreview.style.display === "block" ? menuPhotoPreview.src : "";
+            let image = menuPhotoPreview.src && menuPhotoPreview.style.display === "block" ? menuPhotoPreview.src : "";
 
             if (!name || !description || !price) {
                 alert("Please fill all fields.");
                 return;
             }
 
-            if (editingMenuId) {
-                // Edit
-                const idx = menuItems.findIndex(i => i.id === editingMenuId);
-                if (idx !== -1) {
-                    menuItems[idx] = { ...menuItems[idx], name, description, price, available, photo };
-                }
-            } else {
-                // Add
-                menuItems.push({
-                    id: Date.now(),
-                    name,
-                    description,
-                    price,
-                    available,
-                    photo
-                });
-            }
-            menuModal.style.display = "none";
-            renderMenuTable();
+            const formData = { name, description, price, available, image };
+            saveMenuItem(formData);
         };
 
-        // Edit Menu Item
-        window.editMenuItem = function (id) {
-            const item = menuItems.find(i => i.id === id);
-            if (!item) return;
-            editingMenuId = id;
-            document.getElementById('menuName').value = item.name;
-            document.getElementById('menuDescription').value = item.description || "";
-            document.getElementById('menuPrice').value = item.price;
-            document.getElementById('menuAvailable').value = item.available ? "true" : "false";
-            if (item.photo) {
-                menuPhotoPreview.src = item.photo;
-                menuPhotoPreview.style.display = "block";
-                menuPhotoName.textContent = "";
-            } else {
-                menuPhotoPreview.style.display = "none";
-                menuPhotoPreview.src = "";
-                menuPhotoName.textContent = "";
-            }
-            document.getElementById('menuModalTitle').textContent = "Edit Menu Item";
-            menuModal.style.display = "flex";
-        };
-
-        // Delete Menu Item
-        window.deleteMenuItem = function (id) {
-            if (confirm("Are you sure you want to delete this menu item?")) {
-                const idx = menuItems.findIndex(i => i.id === id);
-                if (idx !== -1) {
-                    menuItems.splice(idx, 1);
-                    renderMenuTable();
-                }
-            }
-        };
+        // Close modal on outside click
+        menuModal.addEventListener('click', function (e) {
+            if (e.target === menuModal) menuModal.style.display = "none";
+        });
 
         // Keyboard navigation for tabs
         tabButtons.forEach((btn, idx) => {
@@ -1009,13 +848,12 @@
             });
         });
 
-        // Initial render
-        renderMenuTable();
+        // Set admin name
+        document.getElementById('adminName').textContent = 'Admin';
+        document.getElementById('adminWelcomeName').textContent = 'Admin';
 
-        // Close modal on outside click
-        menuModal.addEventListener('click', function (e) {
-            if (e.target === menuModal) menuModal.style.display = "none";
-        });
+        // Initialize admin dashboard
+        initAdminDashboard();
     </script>
 </body>
 
