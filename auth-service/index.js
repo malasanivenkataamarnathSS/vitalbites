@@ -4,206 +4,356 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+
+// Import enhanced middleware and utilities
+const { 
+  otpLimiter, 
+  authLimiter, 
+  securityHeaders, 
+  requestLogger, 
+  errorHandler, 
+  validateRequest 
+} = require('./middleware/security');
+const { authenticateToken } = require('./middleware/auth');
+const logger = require('./utils/logger');
+const {
+  emailSchema,
+  otpVerificationSchema,
+  registrationSchema,
+  profileUpdateSchema,
+  addressSchema
+} = require('./validators/authValidators');
+
 const User = require('./models/User');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Auth DB connected'));
+// Security middleware
+app.use(securityHeaders);
+app.use(requestLogger);
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://vitalbites.com'] // Replace with actual domain
+    : ['http://localhost:3000', 'http://localhost:8080', 'http://localhost'],
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+
+// Database connection with better error handling
+mongoose.connect(process.env.MONGO_URL, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true 
+})
+.then(() => {
+  logger.info('Auth DB connected successfully');
+})
+.catch((error) => {
+  logger.error('Database connection failed:', error);
+  process.exit(1);
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
-// Nodemailer setup (Gmail SMTP with app password)
+// Nodemailer setup with validation
+if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) {
+  logger.warn('SMTP credentials not configured');
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.SMTP_EMAIL, // your gmail
-    pass: process.env.SMTP_PASS   // your app password
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASS
   }
 });
 
 // Send or Resend OTP
-app.post('/api/auth/send-otp', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: "Email required" });
+app.post('/api/auth/send-otp', 
+  otpLimiter, 
+  validateRequest(emailSchema), 
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      let user = await User.findOne({ email });
+      const now = new Date();
 
-  let user = await User.findOne({ email });
-  const now = new Date();
+      // Resend logic: allow resend only after 30s
+      if (user && user.lastOtpSent && now - user.lastOtpSent < 30 * 1000) {
+        const wait = 30 - Math.floor((now - user.lastOtpSent) / 1000);
+        logger.warn('OTP resend attempted too soon', { email, waitTime: wait });
+        return res.status(429).json({ 
+          error: `Please wait ${wait}s before resending OTP.`,
+          retryAfter: wait
+        });
+      }
 
-  // Resend logic: allow resend only after 30s
-  if (user && user.lastOtpSent && now - user.lastOtpSent < 30 * 1000) {
-    const wait = 30 - Math.floor((now - user.lastOtpSent) / 1000);
-    return res.status(429).json({ error: `Please wait ${wait}s before resending OTP.` });
-  }
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpires = new Date(now.getTime() + 10 * 60 * 1000); // 10 min
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpires = new Date(now.getTime() + 10 * 60 * 1000); // 10 min
+      logger.info('OTP generated for user', { email, otpLength: otp.length });
 
-  console.log(`[OTP DEBUG] Generated OTP for ${email}: ${otp}`);
+      if (!user) {
+        user = await User.create({ email, otp, otpExpires, lastOtpSent: now });
+        logger.info('New user created for OTP', { email });
+      } else {
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        user.lastOtpSent = now;
+        await user.save();
+        logger.info('OTP updated for existing user', { email });
+      }
 
-  if (!user) {
-    user = await User.create({ email, otp, otpExpires, lastOtpSent: now });
-  } else {
-    user.otp = otp;
-    user.otpExpires = otpExpires;
-    user.lastOtpSent = now;
-    await user.save();
-  }
+      // Send OTP email
+      if (process.env.SMTP_EMAIL && process.env.SMTP_PASS) {
+        await transporter.sendMail({
+          from: process.env.SMTP_EMAIL,
+          to: email,
+          subject: 'Your VitalBites Login OTP',
+          text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
+          html: `
+            <div style="font-family:Segoe UI,Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #eee;">
+              <h2 style="color:#ff8800;text-align:center;margin-bottom:16px;">VitalBites Login Verification</h2>
+              <p style="font-size:16px;color:#222;text-align:center;">Hello,</p>
+              <p style="font-size:16px;color:#222;text-align:center;">
+                Use the following <b style="font-size:22px;letter-spacing:2px;color:#ff8800;">OTP</b> to log in to your VitalBites account:
+              </p>
+              <div style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#ff8800;text-align:center;margin:24px 0;">
+                ${otp}
+              </div>
+              <p style="font-size:15px;color:#444;text-align:center;">
+                This OTP is valid for <b>10 minutes</b>.<br>
+                If you did not request this, you can safely ignore this email.
+              </p>
+              <hr style="margin:24px 0;">
+              <p style="font-size:13px;color:#888;text-align:center;">Thank you for using VitalBites!</p>
+            </div>
+          `
+        });
+        logger.info('OTP email sent successfully', { email });
+      } else {
+        logger.warn('SMTP not configured - OTP not sent via email', { email, otp });
+      }
 
-  // Send OTP email
-  await transporter.sendMail({
-    from: process.env.SMTP_EMAIL,
-    to: email,
-    subject: 'Your VitalBites Login OTP',
-    text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
-    html: `
-      <div style="font-family:Segoe UI,Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f9fafb;border-radius:12px;border:1px solid #eee;">
-        <h2 style="color:#ff8800;text-align:center;margin-bottom:16px;">VitalBites Login Verification</h2>
-        <p style="font-size:16px;color:#222;text-align:center;">Hello,</p>
-        <p style="font-size:16px;color:#222;text-align:center;">
-          Use the following <b style="font-size:22px;letter-spacing:2px;color:#ff8800;">OTP</b> to log in to your VitalBites account:
-        </p>
-        <div style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#ff8800;text-align:center;margin:24px 0;">
-          ${otp}
-        </div>
-        <p style="font-size:15px;color:#444;text-align:center;">
-          This OTP is valid for <b>10 minutes</b>.<br>
-          If you did not request this, you can safely ignore this email.
-        </p>
-        <hr style="margin:24px 0;">
-        <p style="font-size:13px;color:#888;text-align:center;">Thank you for using VitalBites!</p>
-      </div>
-    `
-  }, (err, info) => {
-    if (err) {
-      console.error(`[OTP] Failed to send email to ${email}:`, err);
-    } else {
-      console.log(`[OTP] Email sent to ${email}:`, info.response);
-    }
-  });
-
-  res.json({ message: "OTP sent" });
-});
-
-// OTP Verification
-app.post('/api/auth/verify-otp', async (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: "Missing fields" });
-
-  const user = await User.findOne({ email });
-  if (!user || user.otp !== otp || user.otpExpires < new Date()) {
-    console.log(`OTP verification failed for: ${email}`);
-    return res.status(400).json({ error: "Invalid or expired OTP" });
-  }
-
-  console.log(`OTP verified successfully for: ${email}`);
-
-  // Check if user is new (no username or mobile)
-  if (!user.username || !user.mobile) {
-    console.log(`New user detected: ${email}. Showing registration form.`);
-    return res.json({
-      needDetails: true,
-      isNewUser: true,
-      message: "Please complete your registration"
-    });
-  }
-
-  // Existing user: login directly
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-  console.log(`Existing user login: ${email}`);
-  res.json({
-    token,
-    userId: user._id,
-    username: user.username,
-    mobile: user.mobile,
-    role: user.role
-  });
-});
-
-// Complete registration for new user
-app.post('/api/auth/complete-registration', async (req, res) => {
-  const { email, username, mobile } = req.body;
-
-  // Validate input
-  if (!email || !username || !mobile) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  // Validate username (letters only, 2-50 characters)
-  const namePattern = /^[a-zA-Z\s]{2,50}$/;
-  if (!namePattern.test(username.trim())) {
-    return res.status(400).json({ error: "Name must contain only letters and be 2-50 characters long" });
-  }
-
-  // Validate Indian mobile number (+91 followed by 10 digits starting with 6-9)
-  const mobilePattern = /^\+91[6-9]\d{9}$/;
-  if (!mobilePattern.test(mobile)) {
-    return res.status(400).json({ error: "Mobile number must be in format +91XXXXXXXXXX and start with 6-9" });
-  }
-
-  try {
-    // Check if mobile is already used by another user
-    const existingMobile = await User.findOne({ 
-      mobile: mobile,
-      email: { $ne: email } // Not the current user
-    });
-    
-    if (existingMobile) {
-      return res.status(400).json({ 
-        error: "This mobile number is already registered with another account" 
+      res.json({ 
+        message: "OTP sent successfully",
+        email: email
+      });
+    } catch (error) {
+      logger.error('Error in send-otp endpoint:', {
+        error: error.message,
+        email: req.body.email
+      });
+      res.status(500).json({ 
+        error: 'Failed to send OTP',
+        message: 'Please try again later'
       });
     }
-    
-    // Continue with registration...
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    const wasNewUser = !user.username || !user.mobile;
-
-    user.username = username.trim();
-    user.mobile = mobile;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-
-    if (wasNewUser) {
-      console.log(`New user registered: ${email}, Name: ${username}, Mobile: ${mobile}`);
-    } else {
-      console.log(`User completed registration: ${email}, Name: ${username}, Mobile: ${mobile}`);
-    }
-
-    res.json({
-      token,
-      userId: user._id,
-      username: user.username,
-      mobile: user.mobile,
-      role: user.role
-    });
-  } catch (err) {
-    console.error("Registration error:", err);
-    return res.status(500).json({ error: "Server error during registration" });
   }
-});
+);
+
+// OTP Verification
+app.post('/api/auth/verify-otp', 
+  authLimiter,
+  validateRequest(otpVerificationSchema),
+  async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+      
+      const user = await User.findOne({ email });
+      if (!user) {
+        logger.warn('OTP verification failed: User not found', { email });
+        return res.status(400).json({ 
+          error: "Invalid credentials",
+          message: "Please request a new OTP"
+        });
+      }
+
+      if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+        logger.warn('OTP verification failed: Invalid or expired OTP', { 
+          email, 
+          hasOtp: !!user.otp,
+          expired: user.otpExpires < new Date()
+        });
+        return res.status(400).json({ 
+          error: "Invalid or expired OTP",
+          message: "Please request a new OTP"
+        });
+      }
+
+      logger.info('OTP verified successfully', { email });
+
+      // Check if user is new (no username or mobile)
+      if (!user.username || !user.mobile) {
+        logger.info('New user detected - registration required', { email });
+        return res.json({
+          needDetails: true,
+          isNewUser: true,
+          message: "Please complete your registration",
+          email: email
+        });
+      }
+
+      // Existing user: login directly
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+
+      const token = jwt.sign(
+        { id: user._id, role: user.role, email: user.email }, 
+        JWT_SECRET, 
+        { expiresIn: '24h' }
+      );
+      
+      logger.info('User logged in successfully', { 
+        email, 
+        userId: user._id, 
+        role: user.role 
+      });
+
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          username: user.username,
+          mobile: user.mobile,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      logger.error('Error in verify-otp endpoint:', {
+        error: error.message,
+        email: req.body.email
+      });
+      res.status(500).json({ 
+        error: 'Verification failed',
+        message: 'Please try again later'
+      });
+    }
+  }
+);
+
+// Complete registration for new user
+app.post('/api/auth/complete-registration', 
+  authLimiter,
+  validateRequest(registrationSchema),
+  async (req, res) => {
+    try {
+      const { email, username, mobile } = req.body;
+
+      // Check if mobile is already used by another user
+      const existingMobile = await User.findOne({ 
+        mobile: mobile,
+        email: { $ne: email } // Not the current user
+      });
+      
+      if (existingMobile) {
+        logger.warn('Registration failed: Mobile number already exists', { 
+          email, 
+          mobile,
+          existingUserEmail: existingMobile.email 
+        });
+        return res.status(400).json({ 
+          error: "Mobile number already registered",
+          message: "This mobile number is already registered with another account" 
+        });
+      }
+      
+      // Find the user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+        logger.warn('Registration failed: User not found', { email });
+        return res.status(400).json({ 
+          error: "User not found",
+          message: "Please start the registration process again"
+        });
+      }
+
+      const wasNewUser = !user.username || !user.mobile;
+
+      user.username = username.trim();
+      user.mobile = mobile;
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+
+      const token = jwt.sign(
+        { id: user._id, role: user.role, email: user.email }, 
+        JWT_SECRET, 
+        { expiresIn: '24h' }
+      );
+
+      logger.info('User registration completed successfully', { 
+        email, 
+        username: username.trim(), 
+        mobile,
+        wasNewUser
+      });
+
+      res.json({
+        success: true,
+        message: "Registration completed successfully",
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          username: user.username,
+          mobile: user.mobile,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      logger.error('Error in complete-registration endpoint:', {
+        error: error.message,
+        email: req.body.email
+      });
+      res.status(500).json({ 
+        error: 'Registration failed',
+        message: 'Please try again later'
+      });
+    }
+  }
+);
 
 // Verify JWT
 app.get('/api/auth/verify', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: "No token" });
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      logger.warn('JWT verification failed: No token provided', { ip: req.ip });
+      return res.status(401).json({ 
+        error: "Authentication required",
+        message: "No access token provided" 
+      });
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ user: decoded });
-  } catch (e) {
-    res.status(401).json({ error: "Invalid token" });
+    logger.debug('JWT verified successfully', { userId: decoded.id });
+    
+    res.json({ 
+      success: true,
+      user: {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role
+      }
+    });
+  } catch (error) {
+    logger.warn('JWT verification failed', { 
+      error: error.message, 
+      ip: req.ip 
+    });
+    
+    const message = error.name === 'TokenExpiredError' 
+      ? 'Token has expired'
+      : 'Invalid token';
+      
+    res.status(401).json({ 
+      error: "Authentication failed",
+      message 
+    });
   }
 });
 
@@ -234,24 +384,6 @@ app.get('/api/auth/debug-user/:email', async (req, res) => {
   }
 });
 
-// JWT Middleware for protected routes
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
 // ===== ADDRESS MANAGEMENT ENDPOINTS =====
 
 // Get all addresses for a user
@@ -259,56 +391,95 @@ app.get('/api/auth/addresses', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('addresses');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      logger.warn('Address fetch failed: User not found', { userId: req.user.id });
+      return res.status(404).json({ 
+        error: 'User not found',
+        message: 'Unable to fetch addresses'
+      });
     }
-    res.json({ addresses: user.addresses || [] });
+    
+    logger.debug('Addresses fetched successfully', { 
+      userId: req.user.id, 
+      addressCount: user.addresses?.length || 0 
+    });
+    
+    res.json({ 
+      success: true,
+      addresses: user.addresses || [] 
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    logger.error('Error fetching addresses:', {
+      error: error.message,
+      userId: req.user.id
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch addresses',
+      message: 'Please try again later'
+    });
   }
 });
 
 // Add new address
-app.post('/api/auth/addresses', authenticateToken, async (req, res) => {
-  try {
-    const { fullName, mobile, street, city, state, pincode, deliveryInstructions, isDefault } = req.body;
+app.post('/api/auth/addresses', 
+  authenticateToken, 
+  validateRequest(addressSchema),
+  async (req, res) => {
+    try {
+      const { fullName, mobile, street, city, state, pincode, deliveryInstructions, isDefault } = req.body;
 
-    // Validation
-    if (!fullName || !mobile || !street || !city || !state || !pincode) {
-      return res.status(400).json({ message: 'All required fields must be provided' });
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        logger.warn('Add address failed: User not found', { userId: req.user.id });
+        return res.status(404).json({ 
+          error: 'User not found',
+          message: 'Unable to add address'
+        });
+      }
+
+      // If this is set as default, unset other defaults
+      if (isDefault) {
+        user.addresses.forEach(addr => addr.isDefault = false);
+      }
+
+      const newAddress = {
+        fullName,
+        mobile,
+        street,
+        city,
+        state,
+        pincode,
+        deliveryInstructions,
+        isDefault: isDefault || user.addresses.length === 0 // First address is default
+      };
+
+      user.addresses.push(newAddress);
+      await user.save();
+
+      const addedAddress = user.addresses[user.addresses.length - 1];
+      
+      logger.info('Address added successfully', {
+        userId: req.user.id,
+        addressId: addedAddress._id,
+        isDefault: addedAddress.isDefault
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Address added successfully',
+        address: addedAddress
+      });
+    } catch (error) {
+      logger.error('Error adding address:', {
+        error: error.message,
+        userId: req.user.id
+      });
+      res.status(500).json({ 
+        error: 'Failed to add address',
+        message: 'Please try again later'
+      });
     }
-
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // If this is set as default, unset other defaults
-    if (isDefault) {
-      user.addresses.forEach(addr => addr.isDefault = false);
-    }
-
-    const newAddress = {
-      fullName,
-      mobile,
-      street,
-      city,
-      state,
-      pincode,
-      deliveryInstructions,
-      isDefault: isDefault || user.addresses.length === 0 // First address is default
-    };
-
-    user.addresses.push(newAddress);
-    await user.save();
-
-    res.status(201).json({
-      message: 'Address added successfully',
-      address: user.addresses[user.addresses.length - 1]
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+);
 
 // Update address
 app.put('/api/auth/addresses/:addressId', authenticateToken, async (req, res) => {
@@ -480,5 +651,10 @@ app.get('/api/user/profile', async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log('Auth Service on 5000'));
+// Apply error handling middleware
+app.use(errorHandler);
+
+app.listen(5000, () => {
+  logger.info('Auth Service started successfully on port 5000');
+});
 
