@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
   username: String,
   email: { type: String, unique: true },
-  mobile: String,
+  mobile: { type: String, sparse: true }, // Change this line temporarily
   otp: String,
   otpExpires: Date,
   lastOtpSent: Date,
@@ -24,5 +24,8 @@ const UserSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Create the unique index manually after ensuring no duplicates exist
+UserSchema.index({ mobile: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', UserSchema);

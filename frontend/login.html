@@ -921,7 +921,22 @@
                     }, 1500);
                 } else {
                     console.log('Registration failed:', data.error);
-                    showFieldError('name', data.error || 'Registration failed. Please try again.');
+                    
+                    // Enhanced mobile number error handling
+                    if (data.error && data.error.toLowerCase().includes('mobile number')) {
+                        showFieldError('mobile', data.error);
+                        // Add stronger shake animation to the mobile field
+                        userMobileInput.classList.add('shake');
+                        
+                        // Show a more prominent alert
+                        showAlert("This mobile number is already registered with another account. Please use a different number.", "error");
+                        
+                        setTimeout(() => {
+                            userMobileInput.classList.remove('shake');
+                        }, 500);
+                    } else {
+                        showFieldError('name', data.error || 'Registration failed. Please try again.');
+                    }
                 }
             } catch (err) {
                 console.error('Registration network error:', err);

@@ -147,34 +147,52 @@ app.post('/api/auth/complete-registration', async (req, res) => {
     return res.status(400).json({ error: "Mobile number must be in format +91XXXXXXXXXX and start with 6-9" });
   }
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(400).json({ error: "User not found" });
+  try {
+    // Check if mobile is already used by another user
+    const existingMobile = await User.findOne({ 
+      mobile: mobile,
+      email: { $ne: email } // Not the current user
+    });
+    
+    if (existingMobile) {
+      return res.status(400).json({ 
+        error: "This mobile number is already registered with another account" 
+      });
+    }
+    
+    // Continue with registration...
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    const wasNewUser = !user.username || !user.mobile;
+
+    user.username = username.trim();
+    user.mobile = mobile;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+
+    if (wasNewUser) {
+      console.log(`New user registered: ${email}, Name: ${username}, Mobile: ${mobile}`);
+    } else {
+      console.log(`User completed registration: ${email}, Name: ${username}, Mobile: ${mobile}`);
+    }
+
+    res.json({
+      token,
+      userId: user._id,
+      username: user.username,
+      mobile: user.mobile,
+      role: user.role
+    });
+  } catch (err) {
+    console.error("Registration error:", err);
+    return res.status(500).json({ error: "Server error during registration" });
   }
-
-  const wasNewUser = !user.username || !user.mobile;
-
-  user.username = username.trim();
-  user.mobile = mobile;
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-
-  if (wasNewUser) {
-    console.log(`New user registered: ${email}, Name: ${username}, Mobile: ${mobile}`);
-  } else {
-    console.log(`User completed registration: ${email}, Name: ${username}, Mobile: ${mobile}`);
-  }
-
-  res.json({
-    token,
-    userId: user._id,
-    username: user.username,
-    mobile: user.mobile,
-    role: user.role
-  });
 });
 
 // Verify JWT
