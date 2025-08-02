@@ -216,5 +216,169 @@ app.get('/api/auth/debug-user/:email', async (req, res) => {
   }
 });
 
+// JWT Middleware for protected routes
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// ===== ADDRESS MANAGEMENT ENDPOINTS =====
+
+// Get all addresses for a user
+app.get('/api/auth/addresses', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('addresses');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ addresses: user.addresses || [] });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Add new address
+app.post('/api/auth/addresses', authenticateToken, async (req, res) => {
+  try {
+    const { fullName, mobile, street, city, state, pincode, deliveryInstructions, isDefault } = req.body;
+
+    // Validation
+    if (!fullName || !mobile || !street || !city || !state || !pincode) {
+      return res.status(400).json({ message: 'All required fields must be provided' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If this is set as default, unset other defaults
+    if (isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+
+    const newAddress = {
+      fullName,
+      mobile,
+      street,
+      city,
+      state,
+      pincode,
+      deliveryInstructions,
+      isDefault: isDefault || user.addresses.length === 0 // First address is default
+    };
+
+    user.addresses.push(newAddress);
+    await user.save();
+
+    res.status(201).json({
+      message: 'Address added successfully',
+      address: user.addresses[user.addresses.length - 1]
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update address
+app.put('/api/auth/addresses/:addressId', authenticateToken, async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const updates = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    // If setting as default, unset other defaults
+    if (updates.isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+
+    Object.assign(address, updates);
+    await user.save();
+
+    res.json({ message: 'Address updated successfully', address });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Delete address
+app.delete('/api/auth/addresses/:addressId', authenticateToken, async (req, res) => {
+  try {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    const wasDefault = address.isDefault;
+    address.deleteOne();
+
+    // If deleted address was default, make first remaining address default
+    if (wasDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    res.json({ message: 'Address deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Set default address
+app.put('/api/auth/addresses/:addressId/default', authenticateToken, async (req, res) => {
+  try {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Unset all defaults
+    user.addresses.forEach(addr => addr.isDefault = false);
+
+    // Set new default
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    address.isDefault = true;
+    await user.save();
+
+    res.json({ message: 'Default address set successfully', address });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 app.listen(5000, () => console.log('Auth Service on 5000'));
 

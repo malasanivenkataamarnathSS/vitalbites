@@ -529,6 +529,8 @@
 
     <!-- Add this in <head> (replace YOUR_GOOGLE_MAPS_API_KEY with your actual key) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Add the new API integration script -->
+    <script src="js/checkout-api.js"></script>
 
     <script>
         // Check authentication on page load
@@ -543,14 +545,31 @@
             return true;
         }
 
-        // Load cart from localStorage (using consistent key with index.html)
-        function loadCart() {
-            return JSON.parse(localStorage.getItem('cartItems') || '[]');
+        // Load cart from backend (enhanced)
+        async function loadCart() {
+            if (!checkoutAPI.token) {
+                return JSON.parse(localStorage.getItem('cartItems') || '[]');
+            }
+
+            try {
+                // First, try to sync any local cart with backend
+                const localCart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                if (localCart.length > 0) {
+                    await checkoutAPI.syncCart(localCart);
+                    localStorage.removeItem('cartItems'); // Clear local storage after sync
+                }
+
+                // Load from backend
+                return await checkoutAPI.loadCart();
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                return JSON.parse(localStorage.getItem('cartItems') || '[]'); // Fallback
+            }
         }
 
-        // Display cart items in checkout
-        function displayCartItems() {
-            const cart = loadCart();
+        // Display cart items in checkout (updated to be async)
+        async function displayCartItems() {
+            const cart = await loadCart();
             const cartContainer = document.getElementById('cart-items');
             const cartCountDisplay = document.getElementById('cart-count-display');
 
@@ -615,9 +634,9 @@
             updateOrderSummary();
         }
 
-        // Update order summary
-        function updateOrderSummary() {
-            const cart = loadCart();
+        // Update order summary (updated to be async)
+        async function updateOrderSummary() {
+            const cart = await loadCart();
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const deliveryFee = subtotal > 0 ? 40 : 0;
             const taxes = subtotal * 0.05; // 5% tax
@@ -629,35 +648,60 @@
             document.getElementById('total-amount').textContent = `₹${total.toFixed(2)}`;
         }
 
-        // Update item quantity
-        function updateQuantity(itemId, newQuantity) {
+        // Update item quantity (now using API)
+        async function updateQuantity(itemId, newQuantity) {
             if (newQuantity <= 0) {
                 removeItem(itemId);
                 return;
             }
 
-            let cart = loadCart();
-            const itemIndex = cart.findIndex(item => item.id === itemId);
+            if (!checkoutAPI.token) {
+                // Fallback to localStorage
+                let cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                const itemIndex = cart.findIndex(item => item.id === itemId);
+                if (itemIndex !== -1) {
+                    cart[itemIndex].quantity = newQuantity;
+                    localStorage.setItem('cartItems', JSON.stringify(cart));
+                    displayCartItems();
+                }
+                return;
+            }
 
-            if (itemIndex !== -1) {
-                cart[itemIndex].quantity = newQuantity;
-                localStorage.setItem('cartItems', JSON.stringify(cart));
-                displayCartItems();
+            try {
+                await checkoutAPI.updateCartItem(itemId, newQuantity);
+                displayCartItems(); // Refresh display
+            } catch (error) {
+                showAlert('Failed to update item quantity', 'error');
+                console.error('Error updating quantity:', error);
             }
         }
 
-        // Remove item from cart
-        function removeItem(itemId) {
-            let cart = loadCart();
-            cart = cart.filter(item => item.id !== itemId);
-            localStorage.setItem('cartItems', JSON.stringify(cart));
-            displayCartItems();
+        // Remove item from cart (now using API)
+        async function removeItem(itemId) {
+            if (!checkoutAPI.token) {
+                // Fallback to localStorage
+                let cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                cart = cart.filter(item => item.id !== itemId);
+                localStorage.setItem('cartItems', JSON.stringify(cart));
+                displayCartItems();
+                return;
+            }
 
-            // If cart becomes empty, show empty state
-            if (cart.length === 0) {
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+            try {
+                await checkoutAPI.removeFromCart(itemId);
+                displayCartItems(); // Refresh display
+                showAlert('Item removed from cart!', 'success');
+
+                // Check if cart is empty
+                const cart = await checkoutAPI.loadCart();
+                if (cart.length === 0) {
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                showAlert('Failed to remove item', 'error');
+                console.error('Error removing item:', error);
             }
         }
 
@@ -741,8 +785,8 @@
             }
         });
 
-        // Place order
-        document.getElementById('place-order').addEventListener('click', function () {
+        // Place order (updated to use API)
+        document.getElementById('place-order').addEventListener('click', async function () {
             const fullName = document.getElementById('fullName').value;
             const mobile = document.getElementById('mobile').value;
             const street = document.getElementById('street').value;
@@ -764,7 +808,8 @@
                 showAlert('Please enter a valid 6-digit pincode', 'error');
                 return;
             }
-            const cart = loadCart();
+
+            const cart = await loadCart();
             if (cart.length === 0) {
                 showAlert('Your cart is empty', 'error');
                 return;
@@ -776,7 +821,15 @@
             }));
 
             // Clear cart and redirect to confirmation page
+            if (checkoutAPI.token) {
+                try {
+                    await checkoutAPI.clearCart();
+                } catch (error) {
+                    console.error('Failed to clear cart on backend:', error);
+                }
+            }
             localStorage.removeItem('cartItems');
+            showAlert('Order placed successfully!', 'success');
             setTimeout(() => {
                 window.location.href = 'order-success.html';
             }, 1200);
@@ -859,60 +912,111 @@
             }
         });
 
-        function loadSavedAddresses() {
-            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+        // Load saved addresses (now using API)
+        async function loadSavedAddresses() {
+            if (!checkoutAPI.token) {
+                // Fallback to localStorage
+                const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                populateAddressDropdown(addresses);
+                return;
+            }
+
+            try {
+                const addresses = await checkoutAPI.loadSavedAddresses();
+                populateAddressDropdown(addresses);
+            } catch (error) {
+                console.error('Error loading addresses:', error);
+                showAlert('Failed to load saved addresses', 'warning');
+            }
+        }
+
+        // Helper function to populate address dropdown
+        function populateAddressDropdown(addresses) {
             const select = document.getElementById('saved-addresses');
             select.innerHTML = '<option value="">Select a saved address</option>';
+
             addresses.forEach((addr, i) => {
-                select.innerHTML += `<option value="${i}">${addr.fullName}, ${addr.street}, ${addr.city}, ${addr.state} - ${addr.pincode}</option>`;
+                const option = document.createElement('option');
+                option.value = addr.id || i; // Use MongoDB _id if available
+                option.textContent = `${addr.fullName}, ${addr.street}, ${addr.city}, ${addr.state} - ${addr.pincode}`;
+                if (addr.isDefault) {
+                    option.textContent += ' (Default)';
+                }
+                option.setAttribute('data-address', JSON.stringify(addr));
+                select.appendChild(option);
             });
         }
 
         document.getElementById('saved-addresses').addEventListener('change', function () {
-            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-            const idx = this.value;
-            if (idx !== "") {
-                const addr = addresses[idx];
-                document.getElementById('fullName').value = addr.fullName;
-                document.getElementById('mobile').value = addr.mobile;
-                document.getElementById('street').value = addr.street;
-                document.getElementById('city').value = addr.city;
-                document.getElementById('state').value = addr.state;
-                document.getElementById('pincode').value = addr.pincode;
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value !== "") {
+                const addr = JSON.parse(selectedOption.getAttribute('data-address') || '{}');
+                document.getElementById('fullName').value = addr.fullName || '';
+                document.getElementById('mobile').value = addr.mobile || '';
+                document.getElementById('street').value = addr.street || '';
+                document.getElementById('city').value = addr.city || '';
+                document.getElementById('state').value = addr.state || '';
+                document.getElementById('pincode').value = addr.pincode || '';
+                document.getElementById('deliveryInstructions').value = addr.deliveryInstructions || '';
             }
         });
 
-        document.getElementById('save-address-btn').addEventListener('click', function () {
-            const addr = {
+        // Save address (now using API)
+        document.getElementById('save-address-btn').addEventListener('click', async function () {
+            const addressData = {
                 fullName: document.getElementById('fullName').value,
                 mobile: document.getElementById('mobile').value,
                 street: document.getElementById('street').value,
                 city: document.getElementById('city').value,
                 state: document.getElementById('state').value,
-                pincode: document.getElementById('pincode').value
+                pincode: document.getElementById('pincode').value,
+                deliveryInstructions: document.getElementById('deliveryInstructions').value || '',
+                isDefault: false
             };
-            if (!addr.fullName || !addr.mobile || !addr.street || !addr.city || !addr.state || !addr.pincode) {
+
+            // Validation
+            if (!addressData.fullName || !addressData.mobile || !addressData.street ||
+                !addressData.city || !addressData.state || !addressData.pincode) {
                 showAlert('Fill all address fields before saving!', 'warning');
                 return;
             }
-            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-            addresses.push(addr);
-            localStorage.setItem('savedAddresses', JSON.stringify(addresses));
-            loadSavedAddresses();
+
+            if (!checkoutAPI.token) {
+                // Fallback to localStorage
+                const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                addresses.push(addressData);
+                localStorage.setItem('savedAddresses', JSON.stringify(addresses));
+                loadSavedAddresses();
+                showAlert('Address saved locally!', 'success');
+                return;
+            }
+
+            try {
+                await checkoutAPI.saveAddress(addressData);
+                showAlert('Address saved successfully!', 'success');
+                loadSavedAddresses(); // Refresh the dropdown
+            } catch (error) {
+                showAlert('Failed to save address', 'error');
+                console.error('Error saving address:', error);
+            }
         });
 
         // Use This Address button: fills form with selected saved address
         document.getElementById('use-address-btn').addEventListener('click', function () {
-            const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-            const idx = document.getElementById('saved-addresses').value;
-            if (idx !== "") {
-                const addr = addresses[idx];
-                document.getElementById('fullName').value = addr.fullName;
-                document.getElementById('mobile').value = addr.mobile;
-                document.getElementById('street').value = addr.street;
-                document.getElementById('city').value = addr.city;
-                document.getElementById('state').value = addr.state;
-                document.getElementById('pincode').value = addr.pincode;
+            const select = document.getElementById('saved-addresses');
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption.value !== "") {
+                const addr = JSON.parse(selectedOption.getAttribute('data-address') || '{}');
+                document.getElementById('fullName').value = addr.fullName || '';
+                document.getElementById('mobile').value = addr.mobile || '';
+                document.getElementById('street').value = addr.street || '';
+                document.getElementById('city').value = addr.city || '';
+                document.getElementById('state').value = addr.state || '';
+                document.getElementById('pincode').value = addr.pincode || '';
+                document.getElementById('deliveryInstructions').value = addr.deliveryInstructions || '';
+                showAlert('Address loaded successfully!', 'success');
+            } else {
+                showAlert('Please select an address first!', 'warning');
             }
         });
 
@@ -944,18 +1048,35 @@
             loadSavedAddresses();
         };
 
-        document.getElementById('delete-address-btn').addEventListener('click', function () {
+        // Delete address (now using API)
+        document.getElementById('delete-address-btn').addEventListener('click', async function () {
             const select = document.getElementById('saved-addresses');
-            const idx = select.value;
-            if (idx === "") {
+            const addressId = select.value;
+
+            if (!addressId) {
                 showAlert('Please select an address to delete.', 'warning');
                 return;
             }
-            let addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-            addresses.splice(idx, 1);
-            localStorage.setItem('savedAddresses', JSON.stringify(addresses));
-            loadSavedAddresses();
-            select.value = "";
+
+            if (!checkoutAPI.token) {
+                // Fallback to localStorage
+                let addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                addresses.splice(parseInt(addressId), 1);
+                localStorage.setItem('savedAddresses', JSON.stringify(addresses));
+                loadSavedAddresses();
+                showAlert('Address deleted!', 'success');
+                return;
+            }
+
+            try {
+                await checkoutAPI.deleteAddress(addressId);
+                showAlert('Address deleted successfully!', 'success');
+                loadSavedAddresses(); // Refresh the dropdown
+                select.value = ''; // Reset selection
+            } catch (error) {
+                showAlert('Failed to delete address', 'error');
+                console.error('Error deleting address:', error);
+            }
         });
     </script>
 </body>
