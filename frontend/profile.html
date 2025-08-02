@@ -431,10 +431,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand Logo -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
                     <div>
-                        <h1
-                            class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                        <h1 class="text-2xl font-bold text-orange-500">
                             VitalBites
                         </h1>
                         <p class="text-xs text-gray-400 hidden sm:block">Fresh • Fast • Delicious</p>
@@ -444,7 +443,7 @@
                 <!-- Right Navigation -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- Home Button -->
-                    <button onclick="goHome()"
+                    <button onclick="window.location.href='index.html'"
                         class="flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 p-3 rounded-lg hover:bg-gray-700 bg-gray-800 group">
                         <i class="fas fa-home text-lg group-hover:scale-110 transition-transform"></i>
                         <span class="hidden sm:block font-medium">Home</span>
@@ -462,28 +461,8 @@
     </header>
 
     <div class="container">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 mt-8">
-            <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-6 text-white text-center">
-                <div class="text-3xl font-bold mb-2" id="total-orders">3</div>
-                <div class="text-orange-100 text-sm">Total Orders</div>
-            </div>
-            <div class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-6 text-white text-center">
-                <div class="text-3xl font-bold mb-2" id="total-spent">₹1,449</div>
-                <div class="text-green-100 text-sm">Total Spent</div>
-            </div>
-            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-6 text-white text-center">
-                <div class="text-3xl font-bold mb-2" id="saved-addresses">2</div>
-                <div class="text-blue-100 text-sm">Saved Addresses</div>
-            </div>
-            <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white text-center">
-                <div class="text-3xl font-bold mb-2" id="member-since">2023</div>
-                <div class="text-purple-100 text-sm">Member Since</div>
-            </div>
-        </div>
-
         <!-- Tabs -->
-        <div class="tabs">
+        <div class="tabs mt-8">
             <button class="tab-btn active" data-tab="profile-tab"><i class="fas fa-user"></i> Profile</button>
             <button class="tab-btn" data-tab="orders-tab"><i class="fas fa-receipt"></i> Orders</button>
             <button class="tab-btn" data-tab="addresses-tab"><i class="fas fa-map-marker-alt"></i> Addresses</button>
