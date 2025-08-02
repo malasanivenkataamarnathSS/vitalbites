@@ -1,0 +1,2 @@
+[31m{"email":"test@example.com","error":"command find requires authentication","level":"error","message":"Error in send-otp endpoint:","service":"auth-service","timestamp":"2025-08-02T19:13:35.768Z"}[39m
+[31m{"email":"test@example.com","error":"command find requires authentication","level":"error","message":"Error in send-otp endpoint:","service":"auth-service","timestamp":"2025-08-02T19:14:32.129Z"}[39m

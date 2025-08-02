@@ -1,0 +1,8 @@
+[32m{"level":"info","message":"Menu Service started successfully on port 5001","service":"menu-service","timestamp":"2025-08-02T19:13:47.107Z"}[39m
+[32m{"level":"info","message":"Menu DB connected successfully","service":"menu-service","timestamp":"2025-08-02T19:13:47.124Z"}[39m
+[31m{"error":"command aggregate requires authentication","level":"error","message":"Error fetching menu items:","query":{"limit":20,"page":1},"service":"menu-service","timestamp":"2025-08-02T19:14:06.877Z"}[39m
+[32m{"duration":"15ms","ip":"::1","level":"info","message":"GET /api/menu","method":"GET","service":"menu-service","statusCode":500,"timestamp":"2025-08-02T19:14:06.881Z","url":"/api/menu","userAgent":"curl/8.5.0"}[39m
+[31m{"error":"command aggregate requires authentication","level":"error","message":"Error fetching menu items:","query":{"limit":20,"page":1},"service":"menu-service","timestamp":"2025-08-02T19:14:32.140Z"}[39m
+[32m{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/menu","method":"GET","service":"menu-service","statusCode":500,"timestamp":"2025-08-02T19:14:32.141Z","url":"/api/menu","userAgent":"curl/8.5.0"}[39m
+[31m{"error":"command distinct requires authentication","level":"error","message":"Error fetching menu categories:","service":"menu-service","timestamp":"2025-08-02T19:14:32.151Z"}[39m
+[32m{"duration":"4ms","ip":"::1","level":"info","message":"GET /api/menu/categories","method":"GET","service":"menu-service","statusCode":500,"timestamp":"2025-08-02T19:14:32.152Z","url":"/api/menu/categories","userAgent":"curl/8.5.0"}[39m

@@ -1,0 +1,11 @@
+[33m{"level":"warn","message":"SMTP credentials not configured","service":"auth-service","timestamp":"2025-08-02T19:13:11.561Z"}[39m
+[32m{"level":"info","message":"Auth Service started successfully on port 5000","service":"auth-service","timestamp":"2025-08-02T19:13:11.569Z"}[39m
+[32m{"level":"info","message":"Auth DB connected successfully","service":"auth-service","timestamp":"2025-08-02T19:13:11.582Z"}[39m
+[31m{"email":"test@example.com","error":"command find requires authentication","level":"error","message":"Error in send-otp endpoint:","service":"auth-service","timestamp":"2025-08-02T19:13:35.768Z"}[39m
+[32m{"duration":"20ms","ip":"::1","level":"info","message":"POST /api/auth/send-otp","method":"POST","service":"auth-service","statusCode":500,"timestamp":"2025-08-02T19:13:35.771Z","url":"/api/auth/send-otp","userAgent":"curl/8.5.0"}[39m
+[31m{"email":"test@example.com","error":"command find requires authentication","level":"error","message":"Error in send-otp endpoint:","service":"auth-service","timestamp":"2025-08-02T19:14:32.129Z"}[39m
+[32m{"duration":"5ms","ip":"::1","level":"info","message":"POST /api/auth/send-otp","method":"POST","service":"auth-service","statusCode":500,"timestamp":"2025-08-02T19:14:32.130Z","url":"/api/auth/send-otp","userAgent":"curl/8.5.0"}[39m
+[33m{"ip":"::1","level":"warn","message":"JWT verification failed: No token provided","service":"auth-service","timestamp":"2025-08-02T19:14:32.159Z"}[39m
+[32m{"duration":"1ms","ip":"::1","level":"info","message":"GET /api/auth/verify","method":"GET","service":"auth-service","statusCode":401,"timestamp":"2025-08-02T19:14:32.160Z","url":"/api/auth/verify","userAgent":"curl/8.5.0"}[39m
+[33m{"errors":["Please provide a valid email address"],"ip":"::1","level":"warn","message":"Validation failed:","service":"auth-service","timestamp":"2025-08-02T19:14:32.168Z","url":"/api/auth/send-otp"}[39m
+[32m{"duration":"2ms","ip":"::1","level":"info","message":"POST /api/auth/send-otp","method":"POST","service":"auth-service","statusCode":400,"timestamp":"2025-08-02T19:14:32.169Z","url":"/api/auth/send-otp","userAgent":"curl/8.5.0"}[39m
