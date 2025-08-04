@@ -619,6 +619,7 @@
         </div>
     </div>
 
+    <script src="js/cart-sync.js"></script>
     <script>
         // Sample data - replace with real data from your backend
         let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
@@ -678,12 +679,8 @@
             }
         ];
 
-        let favorites = [
-            { id: 1, name: "Margherita Pizza", price: 299, image: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=100&h=100&fit=crop", restaurant: "Pizza Corner", rating: 4.5 },
-            { id: 2, name: "Chicken Burger", price: 180, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100&h=100&fit=crop", restaurant: "Burger Hub", rating: 4.2 },
-            { id: 3, name: "Pasta Carbonara", price: 320, image: "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=100&h=100&fit=crop", restaurant: "Italian Corner", rating: 4.8 },
-            { id: 4, name: "Veg Biryani", price: 220, image: "https://images.unsplash.com/photo-1563379091339-03246963d296?w=100&h=100&fit=crop", restaurant: "Biryani House", rating: 4.3 }
-        ];
+        // Load favorites from localStorage using cartManager
+        let favorites = [];
 
         // Tab switching functionality
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1059,6 +1056,9 @@
 
         // Render favorites
         function renderFavorites() {
+            // Load favorites from localStorage
+            favorites = cartManager.loadFavorites();
+            
             const favoritesList = document.getElementById('favorites-list');
 
             if (favorites.length === 0) {
@@ -1084,12 +1084,12 @@
                             <span style="color: #ff8800; font-weight: bold;">₹${item.price}</span>
                             <div style="display: flex; align-items: center; gap: 2px;">
                                 <i class="fas fa-star" style="color: #fbbf24;"></i>
-                                <span style="font-size: 0.9em; color: #9ca3af;">${item.rating}</span>
+                                <span style="font-size: 0.9em; color: #9ca3af;">${item.rating || '4.0'}</span>
                             </div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" onclick="addToCart(${item.id})">
+                        <button class="btn btn-primary" onclick="addToCartFromFavorites(${item.id})">
                             <i class="fas fa-shopping-cart"></i> Add to Cart
                         </button>
                         <button class="btn btn-danger" onclick="removeFromFavorites(${item.id})">
@@ -1101,15 +1101,20 @@
         }
 
         // Favorite functions
-        window.addToCart = function (itemId) {
+        window.addToCartFromFavorites = function (itemId) {
             const item = favorites.find(f => f.id === itemId);
-            showNotification(`${item.name} added to cart!`, 'success');
+            if (item) {
+                // Add to cart using cartManager
+                cartManager.addToCart(item);
+                showNotification(`${item.name} added to cart! 🛒`, 'success');
+            }
         };
 
         window.removeFromFavorites = function (itemId) {
-            if (confirm('Remove this item from favorites?')) {
-                favorites = favorites.filter(f => f.id !== itemId);
-                renderFavorites();
+            const item = favorites.find(f => f.id === itemId);
+            if (item && confirm(`Remove "${item.name}" from favorites?`)) {
+                cartManager.removeFromFavorites(itemId);
+                renderFavorites(); // Refresh the favorites display
                 showNotification('Removed from favorites!', 'info');
             }
         };
