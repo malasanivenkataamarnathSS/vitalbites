@@ -76,17 +76,7 @@ class LocalStorageCart {
         return true;
     }
 
-    // Get cart item count
-    getCartItemCount() {
-        const cart = this.loadCart();
-        return cart.reduce((total, item) => total + item.quantity, 0);
-    }
 
-    // Get cart total price
-    getCartTotal() {
-        const cart = this.loadCart();
-        return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    }
 
     // ===== ADDRESS OPERATIONS =====
 
@@ -149,7 +139,7 @@ class LocalStorageCart {
         }
     }
 
-    // Save favorites to localStorage
+    // Save favorites to localStorage (internal use only)
     saveFavorites(favorites) {
         try {
             localStorage.setItem(this.favoritesKey, JSON.stringify(favorites));
@@ -160,7 +150,7 @@ class LocalStorageCart {
         }
     }
 
-    // Add item to favorites
+    // Add item to favorites (internal use only)
     addToFavorites(item) {
         const favorites = this.loadFavorites();
         const existingFavorite = favorites.find(favItem => favItem.id === item.id);
@@ -201,59 +191,10 @@ class LocalStorageCart {
         return favorites.some(favItem => favItem.id === itemId);
     }
 
-    // Get favorites count
-    getFavoritesCount() {
-        const favorites = this.loadFavorites();
-        return favorites.length;
-    }
 
-    // Clear all favorites
-    clearFavorites() {
-        localStorage.removeItem(this.favoritesKey);
-        return true;
-    }
 
-    // ===== UTILITY METHODS =====
 
-    // Sync cart data (useful for cross-tab synchronization)
-    syncCart(newCartData) {
-        return this.saveCart(newCartData);
-    }
-
-    // Get storage usage info
-    getStorageInfo() {
-        const cart = this.loadCart();
-        const addresses = this.loadSavedAddresses();
-        const favorites = this.loadFavorites();
-        
-        return {
-            cartItems: cart.length,
-            totalQuantity: this.getCartItemCount(),
-            totalValue: this.getCartTotal(),
-            savedAddresses: addresses.length,
-            favoriteItems: favorites.length,
-            storageKeys: [this.storageKey, this.addressKey, this.favoritesKey]
-        };
-    }
-
-    // Clear all data
-    clearAllData() {
-        localStorage.removeItem(this.storageKey);
-        localStorage.removeItem(this.addressKey);
-        localStorage.removeItem(this.favoritesKey);
-        return true;
-    }
 }
 
 // Create global instance
 const cartManager = new LocalStorageCart();
-
-// Make it available globally for console testing
-if (typeof window !== 'undefined') {
-    window.cartManager = cartManager;
-}
-
-// Export for module systems (if needed)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = LocalStorageCart;
-}
