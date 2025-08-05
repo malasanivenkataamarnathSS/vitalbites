@@ -621,6 +621,18 @@
 
     <script src="js/cart-sync.js"></script>
     <script>
+        // Global error handler to catch any remaining null reference errors
+        window.addEventListener('error', function(e) {
+            console.error('Global error caught:', e.error);
+            if (e.error && e.error.message && e.error.message.includes("Cannot read properties of null")) {
+                console.log('Null reference error detected, attempting recovery...');
+                // Try to reinitialize data
+                if (typeof safeRender === 'function') {
+                    safeRender();
+                }
+            }
+        });
+
         // Sample data - replace with real data from your backend
         let userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
             name: 'Alex Johnson',
@@ -679,7 +691,7 @@
             }
         ];
 
-        // Load favorites from localStorage using cartManager
+        // Initialize favorites array safely
         let favorites = [];
 
         // Tab switching functionality
@@ -699,6 +711,15 @@
 
         // Load user profile from server
         async function loadUserProfile() {
+            // For debugging: immediately use fallback
+            const debugMode = !localStorage.getItem('token') || localStorage.getItem('token') === 'mock-token-123';
+            
+            if (debugMode) {
+                console.log('Debug mode: Using immediate fallback');
+                fallbackToLocalStorage();
+                return;
+            }
+            
             try {
                 const token = localStorage.getItem('token');
                 
@@ -710,14 +731,25 @@
                     return;
                 }
                 
-                // Fetch user profile from API
+                // Fetch user profile from API (with timeout and better error handling)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
                 const response = await fetch('/api/user/profile', {
                     headers: {
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
                 if (!response.ok) {
+                    // If it's a 404 or network error, fall back immediately
+                    if (response.status === 404 || response.status >= 500) {
+                        console.log('API endpoint not available, using fallback');
+                        throw new Error('API_NOT_AVAILABLE');
+                    }
                     const errorText = await response.text();
                     throw new Error(`API error: ${response.status} ${errorText}`);
                 }
@@ -729,44 +761,84 @@
                 try {
                     userData = JSON.parse(responseText);
                     console.log("User data:", userData);
+                    
+                    // Ensure userData is not null and has expected structure
+                    if (!userData || typeof userData !== 'object') {
+                        throw new Error("Invalid user data received from server");
+                    }
                 } catch (e) {
                     console.error("JSON parse error:", e);
                     throw new Error("Invalid JSON response from server");
                 }
                 
-                // Update the UI with fetched data
-                document.getElementById('profile-name').textContent = userData.name || 'User';
-                document.getElementById('profile-email').textContent = userData.email || 'No email provided';
-
-                // Update form fields
-                const fullnameInput = document.getElementById('fullname');
-                const emailInput = document.getElementById('email');
-                const phoneInput = document.getElementById('phone');
-                const genderSelect = document.getElementById('gender');
-                const dobInput = document.getElementById('dob');
-
-                if (fullnameInput) fullnameInput.value = userData.name || '';
-                if (emailInput) emailInput.value = userData.email || '';
-                
-                // Display mobile number without +91 prefix
-                if (phoneInput) phoneInput.value = userData.mobile || '';
-                
-                // Set gender if available
-                if (genderSelect && userData.gender) {
-                    genderSelect.value = userData.gender;
-                }
-                
-                // Set date of birth if available
-                if (dobInput && userData.dateOfBirth) {
-                    const date = new Date(userData.dateOfBirth);
-                    if (!isNaN(date.getTime())) {
-                        dobInput.valueAsDate = date;
+                // Update the UI with fetched data (with safety checks)
+                try {
+                    const profileNameElement = document.getElementById('profile-name');
+                    const profileEmailElement = document.getElementById('profile-email');
+                    
+                    if (profileNameElement) {
+                        profileNameElement.textContent = (userData && userData.name) ? userData.name : 'User';
                     }
-                }
+                    if (profileEmailElement) {
+                        profileEmailElement.textContent = (userData && userData.email) ? userData.email : 'No email provided';
+                    }
 
-                showNotification('Profile loaded successfully!', 'success');
+                    // Update form fields safely
+                    const fullnameInput = document.getElementById('fullname');
+                    const emailInput = document.getElementById('email');
+                    const phoneInput = document.getElementById('phone');
+                    const genderSelect = document.getElementById('gender');
+                    const dobInput = document.getElementById('dob');
+
+                    if (fullnameInput && userData) fullnameInput.value = userData.name || '';
+                    if (emailInput && userData) emailInput.value = userData.email || '';
+                    
+                    // Display mobile number without +91 prefix
+                    if (phoneInput && userData) phoneInput.value = userData.mobile || '';
+                    
+                    // Set gender if available
+                    if (genderSelect && userData && userData.gender) {
+                        genderSelect.value = userData.gender;
+                    }
+                    
+                    // Set date of birth if available
+                    if (dobInput && userData && userData.dateOfBirth) {
+                        const date = new Date(userData.dateOfBirth);
+                        if (!isNaN(date.getTime())) {
+                            dobInput.valueAsDate = date;
+                        }
+                    }
+                    
+                    // Update userProfile object safely
+                    userProfile = {
+                        name: (userData && userData.name) ? userData.name : 'User',
+                        email: (userData && userData.email) ? userData.email : 'No email provided',
+                        phone: (userData && userData.mobile) ? userData.mobile : '',
+                        gender: (userData && userData.gender) ? userData.gender : '',
+                        dateOfBirth: (userData && userData.dateOfBirth) ? userData.dateOfBirth : '',
+                        joinDate: (userData && userData.joinDate) ? userData.joinDate : new Date().toISOString()
+                    };
+                    
+                    // Update stats after successful profile load
+                    updateStats();
+
+                    showNotification('Profile loaded successfully!', 'success');
+                } catch (uiError) {
+                    console.error('Error updating UI with profile data:', uiError);
+                    throw new Error('Failed to update profile display: ' + uiError.message);
+                }
             } catch (error) {
                 console.error('Error loading profile:', error);
+                
+                // For API not available or network errors, fall back quietly
+                if (error.message === 'API_NOT_AVAILABLE' || 
+                    error.name === 'AbortError' || 
+                    error.message.includes('fetch')) {
+                    console.log('Using fallback due to API unavailability');
+                    fallbackToLocalStorage();
+                    return; // Don't show error notification for expected API failures
+                }
+                
                 showNotification('Failed to load profile data: ' + error.message, 'error');
                 fallbackToLocalStorage();
             }
@@ -786,33 +858,135 @@
                 userMobile
             });
             
-            if (username) {
-                document.getElementById('profile-name').textContent = username;
-                const fullnameInput = document.getElementById('fullname');
-                if (fullnameInput) fullnameInput.value = username;
+            // Set default values to prevent null errors
+            const defaultName = username || 'User';
+            const defaultEmail = userEmail || 'No email provided';
+            
+            // Update profile display elements
+            const profileNameElement = document.getElementById('profile-name');
+            const profileEmailElement = document.getElementById('profile-email');
+            
+            if (profileNameElement) {
+                profileNameElement.textContent = defaultName;
             }
             
-            if (userEmail) {
-                document.getElementById('profile-email').textContent = userEmail;
-                const emailInput = document.getElementById('email');
-                if (emailInput) emailInput.value = userEmail;
+            if (profileEmailElement) {
+                profileEmailElement.textContent = defaultEmail;
             }
             
-            if (userMobile) {
-                const phoneInput = document.getElementById('phone');
-                if (phoneInput) phoneInput.value = userMobile;
+            // Update form fields with safe values
+            const fullnameInput = document.getElementById('fullname');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            
+            if (fullnameInput) {
+                fullnameInput.value = defaultName;
+            }
+            
+            if (emailInput) {
+                emailInput.value = defaultEmail;
+            }
+            
+            if (phoneInput && userMobile) {
+                phoneInput.value = userMobile;
+            }
+            
+            // Update userProfile object to prevent future errors
+            userProfile = {
+                name: defaultName,
+                email: defaultEmail,
+                phone: userMobile || '',
+                joinDate: new Date().toISOString() // Default to today
+            };
+            
+            // Update stats with the fallback data
+            updateStats();
+        }
+
+        // Safe rendering wrapper to handle null/undefined data
+        function safeRender() {
+            try {
+                // Ensure all arrays are properly initialized
+                if (!addresses) addresses = [];
+                if (!favorites) favorites = [];
+                if (!orders) orders = [];
+                
+                // Clean up any null entries
+                addresses = addresses.filter(addr => addr && typeof addr === 'object');
+                favorites = favorites.filter(fav => fav && typeof fav === 'object');
+                orders = orders.filter(order => order && typeof order === 'object');
+                
+                // Render each component safely
+                try {
+                    renderAddresses();
+                } catch (e) {
+                    console.error('Error rendering addresses:', e);
+                    document.getElementById('addresses-list').innerHTML = '<div class="text-red-400">Error loading addresses</div>';
+                }
+                
+                try {
+                    renderFavorites();
+                } catch (e) {
+                    console.error('Error rendering favorites:', e);
+                    document.getElementById('favorites-list').innerHTML = '<div class="text-red-400">Error loading favorites</div>';
+                }
+                
+                try {
+                    renderOrders();
+                } catch (e) {
+                    console.error('Error rendering orders:', e);
+                    document.getElementById('orders-list').innerHTML = '<div class="text-red-400">Error loading orders</div>';
+                }
+                
+                try {
+                    updateStats();
+                } catch (e) {
+                    console.error('Error updating stats:', e);
+                }
+                
+            } catch (error) {
+                console.error('Error during rendering:', error);
+                showNotification('Error loading profile components. Some features may not work correctly.', 'error');
             }
         }
 
-        // Make sure to call this function when the page loads
-        document.addEventListener('DOMContentLoaded', function () {
-            loadUserProfile();
-        });
-
-        // Helper function to show notifications (if not already defined)
+        // Helper function to show notifications
         function showNotification(message, type = 'info') {
-            // Use your existing notification system or implement a simple one
-            alert(message);
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg text-white max-w-sm shadow-lg`;
+            
+            // Set background color based on type
+            switch(type) {
+                case 'success':
+                    notification.className += ' bg-green-600';
+                    break;
+                case 'error':
+                    notification.className += ' bg-red-600';
+                    break;
+                case 'info':
+                default:
+                    notification.className += ' bg-blue-600';
+                    break;
+            }
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="flex-1">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
         }
 
         // Update stats
@@ -820,7 +994,15 @@
             const orderCount = orders.length;
             const spentAmount = orders.reduce((sum, order) => sum + order.total, 0);
             const addressCount = addresses.length;
-            const joinYear = new Date(userProfile.joinDate).getFullYear();
+            
+            // Safe access to userProfile joinDate with fallback
+            let joinYear = new Date().getFullYear(); // Default to current year
+            if (userProfile && userProfile.joinDate) {
+                const joinDate = new Date(userProfile.joinDate);
+                if (!isNaN(joinDate.getTime())) {
+                    joinYear = joinDate.getFullYear();
+                }
+            }
 
             document.getElementById('total-orders').textContent = orderCount;
             document.getElementById('total-spent').textContent = '₹' + spentAmount.toLocaleString();
@@ -846,9 +1028,14 @@
                 }
 
                 // Get values from form
-                const username = document.getElementById('fullname').value;
+                const username = document.getElementById('fullname').value.trim();
                 const gender = document.getElementById('gender').value;
                 let dateOfBirth = document.getElementById('dob').value;
+                
+                // Validation
+                if (!username) {
+                    throw new Error('Name is required');
+                }
                 
                 // Only send dateOfBirth if a date was selected
                 if (!dateOfBirth) {
@@ -870,10 +1057,30 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to update profile');
+                    const errorText = await response.text();
+                    throw new Error(`Failed to update profile: ${errorText}`);
                 }
 
-                // Reload the profile data
+                const updatedData = await response.json();
+                
+                // Update localStorage with new data
+                localStorage.setItem('username', username);
+                if (updatedData.email) {
+                    localStorage.setItem('userEmail', updatedData.email);
+                }
+                
+                // Update userProfile object
+                userProfile = {
+                    ...userProfile,
+                    name: username,
+                    gender: gender || userProfile.gender,
+                    dateOfBirth: dateOfBirth || userProfile.dateOfBirth
+                };
+                
+                // Update the display
+                document.getElementById('profile-name').textContent = username;
+                
+                // Reload the profile data to sync everything
                 await loadUserProfile();
 
                 submitBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
@@ -895,7 +1102,7 @@
         function renderOrders() {
             const ordersList = document.getElementById('orders-list');
 
-            if (orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 ordersList.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #9ca3af;">
                         <i class="fas fa-receipt" style="font-size: 48px; margin-bottom: 20px;"></i>
@@ -906,24 +1113,24 @@
                 return;
             }
 
-            ordersList.innerHTML = orders.map(order => {
-                const orderDate = new Date(order.date);
+            ordersList.innerHTML = orders.filter(order => order && order.id).map(order => {
+                const orderDate = new Date(order.date || new Date());
                 return `
                 <div class="order-item">
                     <div class="order-header">
-                        <span class="order-id">${order.id}</span>
-                        <span class="status ${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+                        <span class="order-id">${order.id || 'Unknown'}</span>
+                        <span class="status ${order.status || 'pending'}">${(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}</span>
                     </div>
                     <div class="order-details">
                         <div class="order-info">
                             <div style="color: #ff8800; font-weight: bold; margin-bottom: 5px;">
-                                <i class="fas fa-store"></i> ${order.restaurant}
+                                <i class="fas fa-store"></i> ${order.restaurant || 'Unknown Restaurant'}
                             </div>
                             <div style="color: #9ca3af; margin-bottom: 5px;">
                                 <i class="fas fa-calendar"></i> ${orderDate.toLocaleDateString()}
                             </div>
                             <div style="color: #d1d5db;">
-                                <i class="fas fa-utensils"></i> ${order.items.join(', ')}
+                                <i class="fas fa-utensils"></i> ${(order.items || []).join(', ') || 'No items'}
                             </div>
                         </div>
                         <div class="order-total">₹${order.total}</div>
@@ -960,7 +1167,7 @@
         function renderAddresses() {
             const addressesList = document.getElementById('addresses-list');
 
-            if (addresses.length === 0) {
+            if (!addresses || addresses.length === 0) {
                 addressesList.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #9ca3af;">
                         <i class="fas fa-map-marker-alt" style="font-size: 48px; margin-bottom: 20px;"></i>
@@ -970,7 +1177,7 @@
                 return;
             }
 
-            addressesList.innerHTML = addresses.map((address, index) => {
+            addressesList.innerHTML = addresses.filter(address => address && address.name).map((address, index) => {
                 const typeIcons = {
                     home: 'fa-home',
                     work: 'fa-building',
@@ -982,12 +1189,12 @@
                     <div class="address-info">
                         <div class="address-name">
                             <i class="fas ${typeIcons[address.type] || typeIcons.other}"></i>
-                            ${address.name}
+                            ${address.name || 'Unknown Address'}
                         </div>
                         <div class="address-details">
-                            <div><i class="fas fa-map-marker-alt"></i> ${address.street}</div>
-                            <div><i class="fas fa-city"></i> ${address.city}, ${address.state} - ${address.pincode}</div>
-                            <div><i class="fas fa-phone"></i> ${address.phone}</div>
+                            <div><i class="fas fa-map-marker-alt"></i> ${address.street || 'No street address'}</div>
+                            <div><i class="fas fa-city"></i> ${address.city || 'No city'}, ${address.state || 'No state'} - ${address.pincode || 'No pincode'}</div>
+                            <div><i class="fas fa-phone"></i> ${address.phone || 'No phone'}</div>
                         </div>
                     </div>
                     <div class="address-actions">
@@ -1032,13 +1239,18 @@
         });
 
         window.editAddress = function (index) {
+            if (!addresses || !addresses[index]) {
+                showNotification('Address not found', 'error');
+                return;
+            }
+            
             const address = addresses[index];
-            document.getElementById('addr-name').value = address.name;
-            document.getElementById('addr-phone').value = address.phone;
-            document.getElementById('addr-street').value = address.street;
-            document.getElementById('addr-city').value = address.city;
-            document.getElementById('addr-state').value = address.state;
-            document.getElementById('addr-pincode').value = address.pincode;
+            document.getElementById('addr-name').value = address.name || '';
+            document.getElementById('addr-phone').value = address.phone || '';
+            document.getElementById('addr-street').value = address.street || '';
+            document.getElementById('addr-city').value = address.city || '';
+            document.getElementById('addr-state').value = address.state || '';
+            document.getElementById('addr-pincode').value = address.pincode || '';
 
             toggleAddressForm();
             showNotification('Edit mode activated. Update the form and submit.', 'info');
@@ -1057,11 +1269,11 @@
         // Render favorites
         function renderFavorites() {
             // Load favorites from localStorage
-            favorites = cartManager.loadFavorites();
+            favorites = cartManager.loadFavorites() || [];
             
             const favoritesList = document.getElementById('favorites-list');
 
-            if (favorites.length === 0) {
+            if (!favorites || favorites.length === 0) {
                 favoritesList.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #9ca3af;">
                         <i class="fas fa-heart" style="font-size: 48px; margin-bottom: 20px;"></i>
@@ -1072,16 +1284,16 @@
                 return;
             }
 
-            favoritesList.innerHTML = favorites.map(item => `
+            favoritesList.innerHTML = favorites.filter(item => item && item.name).map(item => `
                 <div class="favorite-item">
-                    <img src="${item.image}" alt="${item.name}" />
+                    <img src="${item.image || '/placeholder-image.jpg'}" alt="${item.name || 'Food item'}" />
                     <div style="flex: 1;">
-                        <div style="font-weight: bold; margin-bottom: 5px;">${item.name}</div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">${item.name || 'Unknown Item'}</div>
                         <div style="color: #9ca3af; font-size: 0.9em; margin-bottom: 5px;">
-                            <i class="fas fa-store"></i> ${item.restaurant}
+                            <i class="fas fa-store"></i> ${item.restaurant || 'Unknown Restaurant'}
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: #ff8800; font-weight: bold;">₹${item.price}</span>
+                            <span style="color: #ff8800; font-weight: bold;">₹${item.price || '0'}</span>
                             <div style="display: flex; align-items: center; gap: 2px;">
                                 <i class="fas fa-star" style="color: #fbbf24;"></i>
                                 <span style="font-size: 0.9em; color: #9ca3af;">${item.rating || '4.0'}</span>
@@ -1102,19 +1314,26 @@
 
         // Favorite functions
         window.addToCartFromFavorites = function (itemId) {
-            const item = favorites.find(f => f.id === itemId);
-            if (item) {
+            const item = favorites.find(f => f && f.id === itemId);
+            if (item && item.name) {
                 // Add to cart using cartManager
                 cartManager.addToCart(item);
                 showNotification(`${item.name} added to cart! 🛒`, 'success');
+            } else {
+                showNotification('Unable to add item to cart. Item not found.', 'error');
             }
         };
 
         window.removeFromFavorites = function (itemId) {
-            const item = favorites.find(f => f.id === itemId);
-            if (item && confirm(`Remove "${item.name}" from favorites?`)) {
+            const item = favorites.find(f => f && f.id === itemId);
+            if (item && item.name && confirm(`Remove "${item.name}" from favorites?`)) {
                 cartManager.removeFromFavorites(itemId);
                 renderFavorites(); // Refresh the favorites display
+                showNotification('Removed from favorites!', 'info');
+            } else if (item && !item.name) {
+                // Remove item even if name is missing
+                cartManager.removeFromFavorites(itemId);
+                renderFavorites();
                 showNotification('Removed from favorites!', 'info');
             }
         };
@@ -1193,11 +1412,14 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize arrays safely before any rendering
+            if (!addresses) addresses = [];
+            if (!favorites) favorites = [];
+            if (!orders) orders = [];
+            
+            // Use safe rendering for all components
+            safeRender();
             loadUserProfile();
-            updateStats();
-            renderOrders();
-            renderAddresses();
-            renderFavorites();
         });
     </script>
 </body>

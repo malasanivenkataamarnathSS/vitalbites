@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Setup & Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <div class="text-6xl mb-4">🔧</div>
+            <h1 class="text-2xl font-bold mb-4">Setting up Profile Test Data...</h1>
+            <div id="status" class="text-lg text-gray-400">Initializing...</div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        async function setupAndTest() {
+            try {
+                updateStatus('Clearing existing data...');
+                localStorage.clear();
+                
+                updateStatus('Setting up mock authentication...');
+                localStorage.setItem('token', 'mock-token-123');
+                localStorage.setItem('username', 'John Doe');
+                localStorage.setItem('userEmail', 'john.doe@vitalbites.com');
+                localStorage.setItem('userMobile', '+91 9876543210');
+                
+                updateStatus('Mock data setup complete!');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateStatus('Redirecting to profile page...');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Redirect to profile page
+                window.location.href = 'frontend/profile.html';
+                
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+                console.error('Setup error:', error);
+            }
+        }
+
+        // Auto-run setup
+        setupAndTest();
+    </script>
+</body>
+</html>

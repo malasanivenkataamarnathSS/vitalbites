@@ -6,6 +6,7 @@ class LocalStorageCart {
         this.storageKey = 'cartItems';
         this.addressKey = 'savedAddresses';
         this.favoritesKey = 'favoriteItems';
+        this.profileKey = 'userProfile';
     }
 
     // ===== CART OPERATIONS =====
@@ -191,7 +192,36 @@ class LocalStorageCart {
         return favorites.some(favItem => favItem.id === itemId);
     }
 
+    // ===== PROFILE OPERATIONS =====
 
+    // Load user profile from localStorage
+    loadProfile() {
+        try {
+            const profileData = localStorage.getItem(this.profileKey);
+            return profileData ? JSON.parse(profileData) : null;
+        } catch (error) {
+            console.error('Error loading profile from localStorage:', error);
+            return null;
+        }
+    }
+
+    // Save user profile to localStorage
+    saveProfile(profileData) {
+        try {
+            localStorage.setItem(this.profileKey, JSON.stringify(profileData));
+            return true;
+        } catch (error) {
+            console.error('Error saving profile to localStorage:', error);
+            return false;
+        }
+    }
+
+    // Update specific profile fields
+    updateProfile(updates) {
+        const currentProfile = this.loadProfile() || {};
+        const updatedProfile = { ...currentProfile, ...updates };
+        return this.saveProfile(updatedProfile);
+    }
 
 
 }
