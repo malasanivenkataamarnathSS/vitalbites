@@ -13,4 +13,21 @@ app.use('/api/orders', createProxyMiddleware({ target: 'http://order-service:500
 app.use('/api/user', createProxyMiddleware({ target: 'http://user-service:5003', changeOrigin: true, pathRewrite: { '^/api/user': '/api/user' } }));
 app.use('/api/cart', createProxyMiddleware({ target: 'http://cart-service:5004', changeOrigin: true, pathRewrite: { '^/api/cart': '/api/cart' } }));
 
+// Admin routes (all admin endpoints are handled by respective services)
+app.use('/api/admin', createProxyMiddleware({ 
+  target: 'http://auth-service:5000', 
+  changeOrigin: true, 
+  pathRewrite: { '^/api/admin': '/api/auth/admin' },
+  router: (req) => {
+    // Route admin requests to appropriate services
+    if (req.path.includes('/menu')) {
+      return 'http://menu-service:5001';
+    }
+    if (req.path.includes('/order')) {
+      return 'http://order-service:5002';
+    }
+    return 'http://auth-service:5000';
+  }
+}));
+
 app.listen(8080, () => console.log('API Gateway listening on 8080'));

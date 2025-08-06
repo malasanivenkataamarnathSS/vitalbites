@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const User = require('./models/User');
+const adminAuth = require('./middleware/adminAuth');
 
 const app = express();
 app.use(cors());
@@ -477,6 +478,209 @@ app.get('/api/user/profile', async (req, res) => {
   } catch (error) {
     console.error('Error in profile endpoint:', error);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ===== ADMIN ENDPOINTS =====
+
+// Admin login (same as regular login but checks admin role)
+app.post('/api/auth/admin/login', async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: "Missing fields" });
+
+  const user = await User.findOne({ email });
+  if (!user || user.otp !== otp || user.otpExpires < new Date()) {
+    console.log(`Admin OTP verification failed for: ${email}`);
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+  }
+
+  // Check if user is admin
+  if (user.role !== 'admin') {
+    console.log(`Non-admin user attempted admin login: ${email}`);
+    return res.status(403).json({ error: "Admin access required" });
+  }
+
+  console.log(`Admin login successful: ${email}`);
+
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  await user.save();
+
+  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+  res.json({
+    token,
+    userId: user._id,
+    username: user.username,
+    email: user.email,
+    role: user.role
+  });
+});
+
+// Get admin dashboard statistics
+app.get('/api/auth/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ 
+      role: 'user',
+      username: { $exists: true, $ne: null }
+    });
+    const adminUsers = await User.countDocuments({ role: 'admin' });
+
+    res.json({
+      totalUsers,
+      activeUsers,
+      adminUsers,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all users (admin only)
+app.get('/api/auth/admin/users', adminAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, search = '' } = req.query;
+    const skip = (page - 1) * limit;
+    
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    const users = await User.find(query)
+      .select('username email mobile role createdAt addresses')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await User.countDocuments(query);
+
+    res.json({
+      users: users.map(user => ({
+        id: user._id,
+        name: user.username || 'N/A',
+        email: user.email,
+        mobile: user.mobile || 'N/A',
+        role: user.role,
+        status: user.username ? 'active' : 'inactive',
+        createdAt: user.createdAt,
+        addressCount: user.addresses ? user.addresses.length : 0
+      })),
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalUsers: total,
+        hasNext: skip + users.length < total,
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update user role (admin only)
+app.put('/api/auth/admin/users/:userId/role', adminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    // Prevent admin from demoting themselves
+    if (userId === req.user.id && role !== 'admin') {
+      return res.status(400).json({ error: 'Cannot change your own role' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId, 
+      { role }, 
+      { new: true }
+    ).select('username email role');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log(`Admin ${req.user.email} changed role of ${user.email} to ${role}`);
+    res.json({ 
+      message: 'User role updated successfully',
+      user: {
+        id: user._id,
+        name: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete user (admin only)
+app.delete('/api/auth/admin/users/:userId', adminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Prevent admin from deleting themselves
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    console.log(`Admin ${req.user.email} deleted user ${user.email}`);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all addresses (admin only)
+app.get('/api/auth/admin/addresses', adminAuth, async (req, res) => {
+  try {
+    const users = await User.find({ 
+      addresses: { $exists: true, $ne: [] } 
+    }).select('username email addresses');
+
+    const allAddresses = [];
+    users.forEach(user => {
+      user.addresses.forEach(address => {
+        allAddresses.push({
+          id: address._id,
+          userId: user._id,
+          userName: user.username || 'N/A',
+          userEmail: user.email,
+          label: `${address.fullName} - ${address.city}`,
+          fullAddress: `${address.street}, ${address.city}, ${address.state} - ${address.pincode}`,
+          mobile: address.mobile,
+          isDefault: address.isDefault,
+          createdAt: address.createdAt
+        });
+      });
+    });
+
+    res.json({ addresses: allAddresses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) });
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
