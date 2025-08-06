@@ -177,17 +177,17 @@
                 transform: scale(1);
                 color: #9ca3af;
             }
-            
+
             25% {
                 transform: scale(1.1);
                 color: #fbbf24;
             }
-            
+
             50% {
                 transform: scale(1.2);
                 color: #f59e0b;
             }
-            
+
             75% {
                 transform: scale(1.15);
                 color: #f97316;
@@ -204,7 +204,7 @@
                 transform: scale(1);
                 color: #ef4444;
             }
-            
+
             50% {
                 transform: scale(0.9);
                 color: #9ca3af;
@@ -230,19 +230,23 @@
 
         /* Heart with gradient colors for different levels */
         .heart-level-1 {
-            color: #fbbf24 !important; /* Yellow */
+            color: #fbbf24 !important;
+            /* Yellow */
         }
 
         .heart-level-2 {
-            color: #f59e0b !important; /* Orange */
+            color: #f59e0b !important;
+            /* Orange */
         }
 
         .heart-level-3 {
-            color: #f97316 !important; /* Deep Orange */
+            color: #f97316 !important;
+            /* Deep Orange */
         }
 
         .heart-level-4 {
-            color: #ef4444 !important; /* Red */
+            color: #ef4444 !important;
+            /* Red */
         }
 
         /* Ensure favorite button is clickable */
@@ -1130,69 +1134,53 @@
             // Add event listeners to favorite buttons with enhanced mobile support
             document.querySelectorAll('.favorite-btn').forEach((button, index) => {
                 console.log(`🎯 Adding event listener to favorite button ${index + 1}:`, button);
-                
+
                 // Add a simple test click first
                 button.style.cursor = 'pointer';
                 button.style.pointerEvents = 'auto';
-                
+
                 button.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('❤️ HEART CLICKED! Button:', this);
                     console.log('❤️ Event object:', e);
-                    
+
                     // Simple visual feedback first
                     const icon = this.querySelector('i');
                     console.log('🎯 Icon found:', icon);
-                    
+
                     if (!icon) {
                         console.error('❌ No icon found in button!');
                         return;
                     }
-                    
+
                     // Basic color toggle test
                     if (icon.classList.contains('text-gray-400')) {
                         icon.classList.remove('text-gray-400');
                         icon.classList.add('text-red-500');
-                        alert('Heart added to favorites! ❤️');
                     } else {
                         icon.classList.remove('text-red-500');
                         icon.classList.add('text-gray-400');
-                        alert('Heart removed from favorites! 💔');
-                    }
-                    
-                    // Now try the advanced functionality if cartManager exists
-                    if (typeof cartManager === 'undefined') {
-                        console.error('❌ cartManager is not available!');
-                        return;
-                    }
-                    
-                    const itemId = parseInt(this.getAttribute('data-id'));
-                    console.log('📋 Item ID:', itemId);
-                    const item = foodItems.find(item => item.id === itemId);
-                    
-                    if (!item) {
-                        console.error('❌ Item not found for ID:', itemId);
-                        return;
                     }
 
-                    console.log('🍽️ Found item:', item);
-                    
-                    // Toggle favorite status
-                    const isNowFavorite = cartManager.toggleFavorite(item);
-                    console.log('💖 Is now favorite:', isNowFavorite);
-                    
-                    // Show success message
-                    if (isNowFavorite) {
-                        showAlert(`${item.name} added to favorites! ❤️`, 'success');
-                    } else {
-                        showAlert(`${item.name} removed from favorites`, 'info');
+                    // Toggle favorite status using cartManager
+                    const itemId = parseInt(this.getAttribute('data-id'));
+                    const item = foodItems.find(item => item.id === itemId);
+                    if (!item) return;
+                    cartManager.toggleFavorite(item);
+                    // Optionally sync to backend if logged in
+                    if (localStorage.getItem('token')) {
+                        fetch(`/api/favorites/${localStorage.getItem('userId')}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ favorites: cartManager.loadFavorites() })
+                        });
                     }
                 });
-                
+
                 console.log(`✅ Event listener added to button ${index + 1}`);
             });
-            
+
             console.log(`🎯 Total favorite buttons found: ${document.querySelectorAll('.favorite-btn').length}`);
         }
 
@@ -1403,13 +1391,13 @@
                                 showAlert('Item removed from cart', 'info', 1000);
                             }
                             updateCart();
-                            
+
                             // Add visual feedback
                             this.classList.add('scale-110');
                             setTimeout(() => {
                                 this.classList.remove('scale-110');
                             }, 150);
-                            
+
                             // Haptic feedback
                             if (navigator.vibrate) {
                                 navigator.vibrate(25);
@@ -1426,13 +1414,13 @@
                         if (item) {
                             item.quantity += 1;
                             updateCart();
-                            
+
                             // Add visual feedback
                             this.classList.add('scale-110');
                             setTimeout(() => {
                                 this.classList.remove('scale-110');
                             }, 150);
-                            
+
                             // Haptic feedback
                             if (navigator.vibrate) {
                                 navigator.vibrate(25);
@@ -1870,6 +1858,7 @@
             card.addEventListener('mouseenter', function () {
                 this.style.transform = 'translateY(-5px)';
                 this.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+
             });
 
             card.addEventListener('mouseleave', function () {
